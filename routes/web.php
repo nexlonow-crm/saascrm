@@ -3,6 +3,11 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\ContactsController;
+use App\Http\Controllers\CompaniesController;
+use App\Http\Controllers\DealsController;
+
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -18,3 +23,17 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+
+Route::middleware('auth')->group(function () {
+    Route::view('/dashboard', 'dashboard')->name('dashboard');
+
+    Route::resource('contacts', ContactsController::class);
+    Route::resource('companies', CompaniesController::class);
+    Route::resource('pipelines', PipelinesController::class);
+    Route::resource('deals', DealsController::class);
+    Route::resource('activities', ActivitiesController::class);
+});
+
+
+

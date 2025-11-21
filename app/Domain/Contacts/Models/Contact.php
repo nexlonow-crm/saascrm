@@ -2,6 +2,7 @@
 
 namespace App\Domain\Contacts\Models;
 
+
 use App\Domain\Companies\Models\Company;
 use App\Domain\Deals\Models\Deal;
 use App\Domain\Activities\Models\Activity;
