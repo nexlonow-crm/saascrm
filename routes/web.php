@@ -25,7 +25,7 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'tenant'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::resource('contacts', ContactsController::class);
     Route::resource('companies', CompaniesController::class);

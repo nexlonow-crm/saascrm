@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Account;
+use App\Models\Tenant;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,14 +39,14 @@ class RegisteredUserController extends Controller
         
         // 1. Create account
         $account = Account::create([
-            'name' => $input['name'] . "'s Account",
+            'name' => $request->name . "'s Account",
             'plan' => 'free',
         ]);
 
         // 2. Create tenant (CRM Instance)
         $tenant = Tenant::create([
             'account_id' => $account->id,
-            'name' => $input['name'] . "'s CRM",
+            'name' => $request->name . "'s CRM",
             'status' => 'active',
         ]);
 
