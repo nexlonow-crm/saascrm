@@ -27,7 +27,6 @@ require __DIR__.'/auth.php';
 
 Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
-
     Route::resource('contacts', ContactsController::class);
     Route::resource('companies', CompaniesController::class);
     Route::resource('pipelines', PipelinesController::class);

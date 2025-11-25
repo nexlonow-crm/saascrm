@@ -10,7 +10,6 @@ class CompaniesController extends Controller
     public function index()
     {
         $user = auth()->user();
-
         $companies = Company::where('account_id', $user->account_id)
             ->where('tenant_id', $user->tenant_id)
             ->latest()

@@ -45,4 +45,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function account()
+    {
+        return $this->belongsTo(\App\Models\Account::class);
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(\App\Models\Tenant::class);
+    }
 }
