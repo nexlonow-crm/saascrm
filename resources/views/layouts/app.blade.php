@@ -1,158 +1,146 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- CSRF Token -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'CRM')</title>
 
-    <title>
-        @hasSection('title')
-            @yield('title') · {{ config('app.name', 'Laravel') }}
-        @else
-            {{ config('app.name', 'Laravel') }}
-        @endif
-    </title>
+    <!-- AdminKit CSS -->
+    <link href="{{ asset('admin/css/app.css') }}" rel="stylesheet" />
 
-    <!-- Fonts (optional: use any you like) -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- Vite compiled CSS & JS (includes Bootstrap) -->
-    @vite(['resources/js/app.js'])
+    @stack('styles')
 </head>
-<body class="bg-light">
-    <div id="app">
-        {{-- Top Navbar --}}
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container">
-                <a class="navbar-brand fw-semibold" href="{{ url('/') }}">
-                    {{ config('app.name', 'CRM SaaS') }}
+
+<body>
+    <div class="wrapper">
+        
+        {{-- SIDEBAR --}}
+        <nav id="sidebar" class="sidebar js-sidebar">
+            <div class="sidebar-content js-simplebar">
+
+                <a class="sidebar-brand" href="{{ route('dashboard') }}">
+                    <span class="align-middle">{{ config('app.name') }}</span>
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-                        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <ul class="sidebar-nav">
 
-                <div class="collapse navbar-collapse" id="mainNavbar">
-                    {{-- Left side links --}}
-                    @auth
-                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                            <li class="nav-item">
-                                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                    Dashboard
-                                </a>
-                            </li>
+                    <li class="sidebar-header">CRM</li>
 
-                            {{-- Example CRM links, adjust as routes exist --}}
-                            <li class="nav-item">
-                                <a href="{{ route('contacts.index') }}" class="nav-link {{ request()->is('contacts*') ? 'active' : '' }}">
-                                    Contacts
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('companies.index') }}" class="nav-link {{ request()->is('companies*') ? 'active' : '' }}">
-                                    Companies
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('deals.index') }}" class="nav-link {{ request()->is('deals*') ? 'active' : '' }}">
-                                    Deals
-                                </a>
-                            </li>
-                            {{-- Add more: Inventory, HR, etc. --}}
-                        </ul>
-                    @endauth
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="{{ route('dashboard') }}">
+                            <i class="align-middle" data-feather="sliders"></i> 
+                            <span class="align-middle">Dashboard</span>
+                        </a>
+                    </li>
 
-                    {{-- Right side auth / user menu --}}
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        @guest
-                            @if (Route::has('login'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">Login</a>
-                                </li>
-                            @endif
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="{{ route('contacts.index') }}">
+                            <i class="align-middle" data-feather="users"></i> 
+                            <span class="align-middle">Contacts</span>
+                        </a>
+                    </li>
 
-                            @if (Route::has('register'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">Register</a>
-                                </li>
-                            @endif
-                        @else
-                            {{-- Notifications / "What's New" placeholder --}}
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="whatsNewDropdown" role="button"
-                                   data-bs-toggle="dropdown" aria-expanded="false">
-                                    What’s New
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="whatsNewDropdown">
-                                    <li class="dropdown-item text-muted small">No new updates yet.</li>
-                                </ul>
-                            </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="{{ route('companies.index') }}">
+                            <i class="align-middle" data-feather="briefcase"></i> 
+                            <span class="align-middle">Companies</span>
+                        </a>
+                    </li>
 
-                            {{-- User menu --}}
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
-                                   data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {{ Auth::user()->name }}
-                                </a>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="{{ route('deals.index') }}">
+                            <i class="align-middle" data-feather="dollar-sign"></i> 
+                            <span class="align-middle">Deals</span>
+                        </a>
+                    </li>
 
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    {{-- Account/Profile --}}
-                                    @if (Route::has('profile.show'))
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('profile.show') }}">
-                                                Profile & Account
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                    @endif
+                </ul>
 
-                                    {{-- Logout --}}
-                                    <li>
-                                        <form id="logout-form" action="{{ route('logout') }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="dropdown-item">
-                                                Logout
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
-                        @endguest
-                    </ul>
-                </div>
             </div>
         </nav>
 
-        {{-- Main Content --}}
-        <main class="py-4">
-            <div class="container">
-                {{-- Flash messages --}}
-                @if (session('status'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('status') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+        {{-- MAIN CONTENT --}}
+        <div class="main">
 
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong>There were some problems with your input.</strong>
-                        <ul class="mb-0 mt-2 small">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+            {{-- Navbar --}}
+            <nav class="navbar navbar-expand navbar-light navbar-bg">
+                <a class="sidebar-toggle js-sidebar-toggle">
+                    <i class="hamburger align-self-center"></i>
+                </a>
 
-                @yield('content')
-            </div>
-        </main>
+                <div class="navbar-collapse collapse">
+
+                    <ul class="navbar-nav ms-auto navbar-align">
+
+                        {{-- User Menu --}}
+                        <li class="nav-item dropdown">
+
+                            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+                                <img src="{{ asset('admin/img/avatars/avatar.jpg') }}" class="avatar img-fluid rounded me-1" alt="User" />
+                                <span class="text-dark">{{ auth()->user()->name ?? 'User' }}</span>
+                            </a>
+
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="#">
+                                    <i class="align-middle me-1" data-feather="user"></i> Profile
+                                </a>
+
+                                <div class="dropdown-divider"></div>
+
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button class="dropdown-item">
+                                        <i class="align-middle me-1" data-feather="log-out"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+
+                        </li>
+                    </ul>
+
+                </div>
+
+            </nav>
+
+            {{-- PAGE CONTENT --}}
+            <main class="content">
+                <div class="container-fluid p-0">
+
+                    @hasSection('page-title')
+                        <h1 class="h3 mb-3">@yield('page-title')</h1>
+                    @endif
+
+                    @yield('content')
+
+                </div>
+            </main>
+
+            {{-- FOOTER --}}
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="row text-muted">
+                        <div class="col-6 text-start">
+                            <p class="mb-0">
+                                <strong>{{ config('app.name') }}</strong> © {{ date('Y') }}
+                            </p>
+                        </div>
+                        <div class="col-6 text-end"></div>
+                    </div>
+                </div>
+            </footer>
+
+        </div>
     </div>
+
+    <!-- AdminKit JS -->
+    <script src="{{ asset('admin/js/app.js') }}"></script>
+
+    @stack('scripts')
 </body>
 </html>
