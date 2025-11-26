@@ -28,38 +28,76 @@
                 </a>
 
                 <ul class="sidebar-nav">
-
                     <li class="sidebar-header">CRM</li>
 
                     <li class="sidebar-item">
                         <a class="sidebar-link" href="{{ route('dashboard') }}">
-                            <i class="align-middle" data-feather="sliders"></i> 
+                            <i class="align-middle" data-feather="sliders"></i>
                             <span class="align-middle">Dashboard</span>
                         </a>
                     </li>
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="{{ route('contacts.index') }}">
-                            <i class="align-middle" data-feather="users"></i> 
-                            <span class="align-middle">Contacts</span>
-                        </a>
-                    </li>
+                    {{-- Contacts (all plans in our config) --}}
+                    @if(isset($currentTenant) && $currentTenant->hasFeature('contacts'))
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{{ route('contacts.index') }}">
+                                <i class="align-middle" data-feather="users"></i>
+                                <span class="align-middle">Contacts</span>
+                            </a>
+                        </li>
+                    @endif
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="{{ route('companies.index') }}">
-                            <i class="align-middle" data-feather="briefcase"></i> 
-                            <span class="align-middle">Companies</span>
-                        </a>
-                    </li>
+                    {{-- Companies --}}
+                    @if(isset($currentTenant) && $currentTenant->hasFeature('companies'))
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{{ route('companies.index') }}">
+                                <i class="align-middle" data-feather="briefcase"></i>
+                                <span class="align-middle">Companies</span>
+                            </a>
+                        </li>
+                    @endif
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="{{ route('deals.index') }}">
-                            <i class="align-middle" data-feather="dollar-sign"></i> 
-                            <span class="align-middle">Deals</span>
-                        </a>
-                    </li>
+                    {{-- Deals (basic) --}}
+                    @if(isset($currentTenant) && $currentTenant->hasFeature('deals.basic'))
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{{ route('deals.index') }}">
+                                <i class="align-middle" data-feather="dollar-sign"></i>
+                                <span class="align-middle">Deals</span>
+                            </a>
+                        </li>
+                    @endif
 
+                    {{-- Inventory only for Pro + Enterprise --}}
+                    @if(isset($currentTenant) && $currentTenant->hasFeature('inventory'))
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{{ route('inventory.index') }}">
+                                <i class="align-middle" data-feather="truck"></i>
+                                <span class="align-middle">Inventory</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- HR only for Enterprise --}}
+                    @if(isset($currentTenant) && $currentTenant->hasFeature('hr'))
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{{ route('hr.employees.index') }}">
+                                <i class="align-middle" data-feather="users"></i>
+                                <span class="align-middle">HR & Team</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- Accounting only for Enterprise --}}
+                    @if(isset($currentTenant) && $currentTenant->hasFeature('accounting'))
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{{ route('accounting.dashboard') }}">
+                                <i class="align-middle" data-feather="file-text"></i>
+                                <span class="align-middle">Accounting</span>
+                            </a>
+                        </li>
+                    @endif
                 </ul>
+
 
             </div>
         </nav>

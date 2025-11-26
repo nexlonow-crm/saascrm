@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\CompaniesController;
 use App\Http\Controllers\DealsController;
-
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -32,7 +32,19 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::resource('pipelines', PipelinesController::class);
     Route::resource('deals', DealsController::class);
     Route::resource('activities', ActivitiesController::class);
+
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('contacts', \App\Http\Controllers\ContactsController::class);
+    Route::resource('companies', \App\Http\Controllers\CompaniesController::class);
+    Route::resource('deals', \App\Http\Controllers\DealsController::class);
 });
+
+
+
+
+
+
 
 
 

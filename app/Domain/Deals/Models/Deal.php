@@ -16,6 +16,10 @@ class Deal extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STATUS_OPEN = 'open';
+    public const STATUS_WON  = 'won';
+    public const STATUS_LOST = 'lost';
+
     protected $fillable = [
         'account_id',
         'tenant_id',
