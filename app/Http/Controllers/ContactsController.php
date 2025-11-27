@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Contacts\Models\Contact;
 use App\Domain\Companies\Models\Company;
 use Illuminate\Http\Request;
+use App\Notifications\ContactCreatedNotification;
 
 class ContactsController extends Controller
 {
@@ -60,7 +61,12 @@ class ContactsController extends Controller
         $data['owner_id']   = $user->id;
         $data['status']     = $data['status'] ?? 'active';
 
-        Contact::create($data);
+        
+        $contact = Contact::create($data);
+
+        // notify the current user (or account owner etc.)
+        $user->notify(new ContactCreatedNotification($contact));
+        
 
         return redirect()
             ->route('contacts.index')

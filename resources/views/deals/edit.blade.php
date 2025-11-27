@@ -1,18 +1,23 @@
+{{-- resources/views/deals/edit.blade.php --}}
 @extends('layouts.app')
 
-@section('content')
-<div class="row">
-  <div class="col-lg-9">
-    <div class="card">
-      <div class="card-body">
-        <h1 class="h5 mb-3">Edit Deal</h1>
+@section('title', 'Edit Deal')
+@section('page-title', 'Edit Deal')
 
+@section('content')
+<div class="card">
+    <div class="card-body">
         <form method="POST" action="{{ route('deals.update', $deal) }}">
-          @method('PUT')
-          @include('deals._form', ['deal' => $deal, 'submitLabel' => 'Update Deal'])
+            @csrf
+            @method('PUT')
+            @include('deals._form', [
+                'deal'      => $deal,
+                'pipelines' => $pipelines,
+                'companies' => $companies,
+                'contacts'  => $contacts,
+            ])
+            <button type="submit" class="btn btn-primary mt-3">Update Deal</button>
         </form>
-      </div>
     </div>
-  </div>
 </div>
 @endsection

@@ -2,64 +2,117 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Domain\Deals\Models\Pipeline;
 use Illuminate\Http\Request;
 
 class PipelinesController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $user = $request->user();
+
+        $pipelines = Pipeline::where('account_id', $user->account_id)
+            ->where('tenant_id', $user->tenant_id)
+            ->withCount('stages')
+            ->orderBy('name')
+            ->paginate(15);
+
+        return view('pipelines.index', compact('pipelines'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('pipelines.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name'       => ['required', 'string', 'max:255'],
+            'type'       => ['nullable', 'string', 'max:50'], // sales, job_search, etc.
+            'is_default' => ['nullable', 'boolean'],
+        ]);
+
+        $data['account_id'] = $user->account_id;
+        $data['tenant_id']  = $user->tenant_id;
+        $data['is_default'] = $request->boolean('is_default');
+
+        // if this is set as default, unset other defaults for this tenant
+        if ($data['is_default']) {
+            Pipeline::where('account_id', $user->account_id)
+                ->where('tenant_id', $user->tenant_id)
+                ->update(['is_default' => false]);
+        }
+
+        $pipeline = Pipeline::create($data);
+
+        return redirect()
+            ->route('pipelines.edit', $pipeline)
+            ->with('status', 'Pipeline created. You can now add stages.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Pipeline $pipeline)
     {
-        //
+        $this->authorizePipeline($pipeline);
+
+        $pipeline->load(['stages' => function ($q) {
+            $q->orderBy('position');
+        }]);
+
+        return view('pipelines.edit', compact('pipeline'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Pipeline $pipeline)
     {
-        //
+        $this->authorizePipeline($pipeline);
+
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name'       => ['required', 'string', 'max:255'],
+            'type'       => ['nullable', 'string', 'max:50'],
+            'is_default' => ['nullable', 'boolean'],
+        ]);
+
+        $data['is_default'] = $request->boolean('is_default');
+
+        if ($data['is_default']) {
+            Pipeline::where('account_id', $user->account_id)
+                ->where('tenant_id', $user->tenant_id)
+                ->update(['is_default' => false]);
+        }
+
+        $pipeline->update($data);
+
+        return redirect()
+            ->route('pipelines.index')
+            ->with('status', 'Pipeline updated.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Pipeline $pipeline)
     {
-        //
+        $this->authorizePipeline($pipeline);
+
+        // You may want to prevent delete if deals exist in this pipeline
+        if ($pipeline->deals()->exists()) {
+            return back()->withErrors('Cannot delete pipeline that has deals.');
+        }
+
+        $pipeline->delete();
+
+        return redirect()
+            ->route('pipelines.index')
+            ->with('status', 'Pipeline deleted.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    protected function authorizePipeline(Pipeline $pipeline): void
     {
-        //
+        $user = auth()->user();
+
+        if ($pipeline->account_id !== $user->account_id || $pipeline->tenant_id !== $user->tenant_id) {
+            abort(403);
+        }
     }
 }

@@ -7,6 +7,11 @@ use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\CompaniesController;
 use App\Http\Controllers\DealsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
+
+use App\Http\Controllers\PipelinesController;
+use App\Http\Controllers\PipelineStageController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -38,6 +43,25 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::resource('contacts', \App\Http\Controllers\ContactsController::class);
     Route::resource('companies', \App\Http\Controllers\CompaniesController::class);
     Route::resource('deals', \App\Http\Controllers\DealsController::class);
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
+
+    Route::resource('pipelines', PipelinesController::class);
+
+    Route::post('pipelines/{pipeline}/stages', [PipelineStageController::class, 'store'])
+        ->name('pipelines.stages.store');
+
+    Route::put('pipelines/{pipeline}/stages/{stage}', [PipelineStageController::class, 'update'])
+        ->name('pipelines.stages.update');
+
+    Route::delete('pipelines/{pipeline}/stages/{stage}', [PipelineStageController::class, 'destroy'])
+        ->name('pipelines.stages.destroy');
+
+    Route::post('pipelines/{pipeline}/stages/reorder', [PipelineStageController::class, 'reorder'])
+        ->name('pipelines.stages.reorder');
+
+        
 });
 
 

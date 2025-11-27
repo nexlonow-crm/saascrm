@@ -9,6 +9,10 @@ use App\Domain\Companies\Models\Company;
 use App\Domain\Contacts\Models\Contact;
 use Illuminate\Http\Request;
 
+use App\Notifications\DealCreatedNotification;
+use App\Notifications\DealWonNotification;
+
+
 class DealsController extends Controller
 {
     public function index()
@@ -66,7 +70,10 @@ class DealsController extends Controller
         $data['currency']   = $data['currency'] ?? 'USD';
         $data['status']     = $data['status'] ?? Deal::STATUS_OPEN;
 
-        Deal::create($data);
+        $deal = Deal::create($data);
+         
+        // 🔔 Notify current user that a new deal was created
+        $user->notify(new DealCreatedNotification($deal));
 
         return redirect()
             ->route('deals.index')
@@ -111,7 +118,17 @@ class DealsController extends Controller
             'expected_close_date'=> ['nullable', 'date'],
         ]);
 
+        $user = auth()->user();
+        $oldStatus = $deal->status;
+    
         $deal->update($data);
+         // After update, check if status changed to WON
+        if ($oldStatus !== Deal::STATUS_WON && $deal->status === Deal::STATUS_WON) {
+            // 🔔 Notify current user that deal is won
+            $user->notify(new DealWonNotification($deal));
+        }
+
+
 
         return redirect()
             ->route('deals.index')

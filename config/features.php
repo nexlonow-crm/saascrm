@@ -2,44 +2,42 @@
 
 return [
 
-    /*
-     * Which features are enabled for which plan.
-     * You can change these anytime.
-     */
     'plans' => [
 
+        // what the FREE plan can see/use
         'free' => [
             'contacts',
             'companies',
             'deals.basic',
+            'pipelines.basic',
         ],
 
+        // PRO plan
         'pro' => [
             'contacts',
             'companies',
             'deals.basic',
             'deals.advanced',
-            'inventory',
+            'pipelines.basic',
+            'pipelines.advanced',
             'reports',
         ],
 
+        // ENTERPRISE
         'enterprise' => [
             'contacts',
             'companies',
             'deals.basic',
             'deals.advanced',
-            'inventory',
+            'pipelines.basic',
+            'pipelines.advanced',
             'reports',
             'hr',
             'payroll',
             'accounting',
             'ai',
         ],
-
     ],
 
-    /*
-     * Default plan if not set.
-     */
     'default_plan' => 'free',
 ];

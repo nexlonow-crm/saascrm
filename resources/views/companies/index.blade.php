@@ -48,8 +48,10 @@
           <td>{{ $companie->extra }}</td>    
           <td>{{ $companie->created_at->format('Y-m-d') }}</td>
           <td class="text-end">
-            <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-            <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-inline">
+
+            
+            <a href="{{ route('companies.edit', $companie) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <form action="{{ route('companies.destroy', $companie) }}" method="POST" class="d-inline">
               @csrf
               @method('DELETE')
               <button class="btn btn-sm btn-outline-danger"

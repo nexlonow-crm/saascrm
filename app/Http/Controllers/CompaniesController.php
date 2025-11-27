@@ -14,8 +14,11 @@ class CompaniesController extends Controller
             ->where('tenant_id', $user->tenant_id)
             ->latest()
             ->paginate(15);
+      
+        return view('companies.index', [
+            'companies' => $companies,
+        ]);
 
-        return view('companies.index', compact('companies'));
     }
 
     public function create()

@@ -1,17 +1,22 @@
+{{-- resources/views/deals/create.blade.php --}}
 @extends('layouts.app')
 
-@section('content')
-<div class="row">
-  <div class="col-lg-9">
-    <div class="card">
-      <div class="card-body">
-        <h1 class="h5 mb-3">Add Deal</h1>
+@section('title', 'Create Deal')
+@section('page-title', 'Create Deal')
 
+@section('content')
+<div class="card">
+    <div class="card-body">
         <form method="POST" action="{{ route('deals.store') }}">
-          @include('deals._form', ['deal' => null, 'submitLabel' => 'Save Deal'])
+            @csrf
+            @include('deals._form', [
+                'deal'      => null,
+                'pipelines' => $pipelines,
+                'companies' => $companies,
+                'contacts'  => $contacts,
+            ])
+            <button type="submit" class="btn btn-primary mt-3">Save Deal</button>
         </form>
-      </div>
     </div>
-  </div>
 </div>
 @endsection

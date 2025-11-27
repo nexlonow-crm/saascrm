@@ -24,10 +24,9 @@ class Tenant extends Model
 
     public function plan(): string
     {
-        // plan is stored on account
         $plan = $this->account->plan ?? null;
 
-        if (! $plan) {
+        if (!$plan) {
             return config('features.default_plan', 'free');
         }
 
@@ -37,7 +36,6 @@ class Tenant extends Model
     public function features(): array
     {
         $plansConfig = config('features.plans', []);
-
         return $plansConfig[$this->plan()] ?? [];
     }
 
