@@ -11,7 +11,7 @@ use App\Http\Controllers\NotificationController;
 
 use App\Http\Controllers\PipelinesController;
 use App\Http\Controllers\PipelineStageController;
-
+use App\Http\Controllers\ActivityController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -34,21 +34,27 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::resource('contacts', ContactsController::class);
     Route::resource('companies', CompaniesController::class);
-    Route::resource('pipelines', PipelinesController::class);
     Route::resource('deals', DealsController::class);
-    Route::resource('activities', ActivitiesController::class);
+    Route::resource('activities', ActivityController::class);
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('contacts', \App\Http\Controllers\ContactsController::class);
-    Route::resource('companies', \App\Http\Controllers\CompaniesController::class);
-    Route::resource('deals', \App\Http\Controllers\DealsController::class);
+   
+
+    Route::resource('contacts', ContactsController::class);
+    Route::resource('companies', CompaniesController::class);
+
+ 
+    Route::resource('deals', DealsController::class);
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
 
+
+     // Pipelines CRUD
     Route::resource('pipelines', PipelinesController::class);
 
+    // Stages inside a pipeline
     Route::post('pipelines/{pipeline}/stages', [PipelineStageController::class, 'store'])
         ->name('pipelines.stages.store');
 
@@ -59,8 +65,17 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         ->name('pipelines.stages.destroy');
 
     Route::post('pipelines/{pipeline}/stages/reorder', [PipelineStageController::class, 'reorder'])
-        ->name('pipelines.stages.reorder');
+    ->name('pipelines.stages.reorder');
 
+    
+    
+    // Activity
+    Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
+    Route::put('/activities/{activity}', [ActivityController::class, 'update'])->name('activities.update');
+    Route::delete('/activities/{activity}', [ActivityController::class, 'destroy'])->name('activities.destroy');
+
+
+   
         
 });
 

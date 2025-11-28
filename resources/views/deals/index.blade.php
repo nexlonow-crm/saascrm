@@ -33,9 +33,11 @@
           <td>{{ optional($deal->primaryContact)->full_name }}</td>
           <td>
             {{ optional($deal->pipeline)->name }}
-            @if($deal->stage)
-              <span class="text-muted">/ {{ $deal->stage->name }}</span>
-            @endif
+             @if($deal->stage)
+              <span class="badge bg-{{ $deal->stage->badgeColor() }}">
+                  {{ $deal->stage->displayName() }}
+              </span>
+          @endif
           </td>
           <td>
             @if(!is_null($deal->amount))

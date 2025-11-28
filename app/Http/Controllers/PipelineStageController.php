@@ -23,6 +23,8 @@ class PipelineStageController extends Controller
 
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
+            'label'       => ['nullable', 'string', 'max:255'],
+            'badge_color' => ['nullable', 'string', 'max:20'],
             'probability' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
@@ -30,6 +32,8 @@ class PipelineStageController extends Controller
 
         $pipeline->stages()->create([
             'name'        => $data['name'],
+            'label'       => $data['label'] ?? null,
+            'badge_color' => $data['badge_color'] ?? null,
             'probability' => $data['probability'] ?? null,
             'position'    => $maxPosition + 1,
         ]);
@@ -47,13 +51,22 @@ class PipelineStageController extends Controller
 
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
+            'label'       => ['nullable', 'string', 'max:255'],
+            'badge_color' => ['nullable', 'string', 'max:20'],
             'probability' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'position'    => ['nullable', 'integer', 'min:0'],
         ]);
+
+        if (!array_key_exists('position', $data)) {
+            $data['position'] = $stage->position;
+        }
 
         $stage->update($data);
 
         return back()->with('status', 'Stage updated.');
     }
+
+
 
     public function destroy(Pipeline $pipeline, Stage $stage)
     {
@@ -77,16 +90,22 @@ class PipelineStageController extends Controller
     {
         $this->authorizePipeline($pipeline);
 
-        $positions = $request->input('positions', []); // [stage_id => position]
+        $order = $request->input('order'); // e.g. "5,3,2,7"
+        if (!$order) {
+            return back()->with('status', 'Nothing to reorder.');
+        }
 
-        foreach ($positions as $stageId => $position) {
-            $stage = $pipeline->stages()->where('id', $stageId)->first();
+        $ids = array_filter(explode(',', $order));
+
+        foreach ($ids as $index => $id) {
+            $stage = $pipeline->stages()->where('id', $id)->first();
             if ($stage) {
-                $stage->position = (int) $position;
+                $stage->position = $index + 1; // 1-based ordering
                 $stage->save();
             }
         }
 
         return back()->with('status', 'Stage order updated.');
     }
+
 }

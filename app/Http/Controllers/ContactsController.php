@@ -7,6 +7,8 @@ use App\Domain\Companies\Models\Company;
 use Illuminate\Http\Request;
 use App\Notifications\ContactCreatedNotification;
 
+
+
 class ContactsController extends Controller
 {
     public function index()
@@ -20,6 +22,22 @@ class ContactsController extends Controller
             ->paginate(15);
 
         return view('contacts.index', compact('contacts'));
+    }
+
+    public function show(Contact $contact)
+    {
+        // Optional: if you have something like authorizeContact()
+        if (method_exists($this, 'authorizeContact')) {
+            $this->authorizeContact($contact);
+        }
+
+        $contact->load([
+            'company',
+            'deals.stage',        // if you have deals relation
+            'activities.owner',   // activity + assigned user
+        ]);
+
+        return view('contacts.show', compact('contact'));
     }
 
     public function create()
@@ -135,4 +153,6 @@ class ContactsController extends Controller
             abort(403);
         }
     }
+
+    
 }

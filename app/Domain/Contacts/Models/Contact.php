@@ -67,9 +67,13 @@ class Contact extends Model
         return $this->belongsTo(Company::class);
     }
 
+    // public function activities()
+    // {
+    //     return $this->hasMany(Activity::class);
+    // }
     public function activities()
     {
-        return $this->hasMany(Activity::class);
+        return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
     }
 
     public function deals()

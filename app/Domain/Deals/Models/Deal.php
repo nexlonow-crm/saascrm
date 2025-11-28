@@ -85,6 +85,6 @@ class Deal extends Model
 
     public function activities()
     {
-        return $this->hasMany(Activity::class);
+        return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
     }
 }

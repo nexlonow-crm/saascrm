@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 use App\Notifications\DealCreatedNotification;
 use App\Notifications\DealWonNotification;
+use App\Models\Activity;
 
 
 class DealsController extends Controller
@@ -154,4 +155,18 @@ class DealsController extends Controller
             abort(403);
         }
     }
+    public function show(Deal $deal)
+    {
+        $this->authorizeDeal($deal); // if you use this
+
+        $deal->load([
+            'company',
+            'primaryContact',
+            'stage',
+            'activities.owner', // eager load owner of each activity
+        ]);
+
+        return view('deals.show', compact('deal'));
+    }
+
 }

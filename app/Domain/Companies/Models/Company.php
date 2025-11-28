@@ -74,4 +74,9 @@ class Company extends Model
     {
         return $query->where('tenant_id', $tenantId);
     }
+    public function activities()
+    {
+        return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
+    }
+
 }

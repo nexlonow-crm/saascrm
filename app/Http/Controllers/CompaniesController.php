@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Companies\Models\Company;
 use Illuminate\Http\Request;
 
+
 class CompaniesController extends Controller
 {
     public function index()
@@ -106,4 +107,20 @@ class CompaniesController extends Controller
             abort(403);
         }
     }
+
+    public function show(Company $company)
+    {
+        if (method_exists($this, 'authorizeCompany')) {
+            $this->authorizeCompany($company);
+        }
+
+        $company->load([
+            'contacts',
+            'deals.stage',
+            'activities.owner',
+        ]);
+
+        return view('companies.show', compact('company'));
+    }
+    
 }

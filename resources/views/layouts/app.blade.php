@@ -47,7 +47,23 @@
         body.theme-dark .text-muted {
             color: #adb5bd !important;
         }
+
+        .stage-order-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1030; /* above content, below navbar if needed */
+            background-color: #ffffff;
+            border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+            padding: 0.75rem 1.5rem;
+        }
+
     </style>
+
+   =
+
 
 </head>
 
@@ -121,6 +137,19 @@
                                 </a>
                             </li>
                         @endif
+
+                        @if($currentTenant->hasFeature('pipelines.basic') && RouteFacade::has('pipelines.index'))
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" href="{{ route('activities.index') }}">
+                                    <i class="align-middle" data-feather="check-square"></i>
+                                    <span class="align-middle">Activities</span>
+                                </a>
+                            </li>
+                        @endif
+                       
+
+
+
                     @endif
 
 
@@ -252,8 +281,8 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
                                 <div class="dropdown-item-text small">
-                                    <div class="fw-bold">{{ $navbarUser->name }}</div>
-                                    <div class="text-muted">{{ $navbarUser->email }}</div>
+                                    <div class="fw-bold">{{ $navbarUser->name ?? 'User' }}</div>
+                                    <div class="text-muted">{{ $navbarUser->email ?? 'User' }}</div>
                                     @isset($currentAccount)
                                         <div class="text-muted">Plan: {{ ucfirst($currentAccount->plan) }}</div>
                                     @endisset
