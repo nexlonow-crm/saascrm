@@ -12,8 +12,9 @@
 @endif
 
 <div class="row">
-    {{-- Left: Company info --}}
+    {{-- Left: Company info, contacts, deals --}}
     <div class="col-lg-5">
+        {{-- Company info --}}
         <div class="card mb-3">
             <div class="card-header">
                 <h5 class="card-title mb-0">{{ $company->name }}</h5>
@@ -24,6 +25,7 @@
                         <a href="{{ $company->website }}" target="_blank">{{ $company->website }}</a>
                     </p>
                 @endif
+
                 @if($company->phone)
                     <p><strong>Phone:</strong> {{ $company->phone }}</p>
                 @endif
@@ -41,7 +43,7 @@
         </div>
 
         {{-- Contacts at this company --}}
-        @if($company->relationLoaded('contacts') && $company->contacts->count())
+        @if($company->contacts->count())
             <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Contacts</h5>
@@ -51,7 +53,7 @@
                         @foreach($company->contacts as $contact)
                             <li class="list-group-item px-0">
                                 <a href="{{ route('contacts.show', $contact) }}">
-                                    {{ $contact->full_name }}
+                                    {{ $contact->full_name ?? ($contact->first_name.' '.$contact->last_name) }}
                                 </a>
                                 @if($contact->email)
                                     <span class="text-muted small"> – {{ $contact->email }}</span>
@@ -64,7 +66,7 @@
         @endif
 
         {{-- Deals for this company --}}
-        @if($company->relationLoaded('deals') && $company->deals->count())
+        @if($company->deals->count())
             <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Deals</h5>
@@ -94,20 +96,41 @@
         @endif
     </div>
 
-    {{-- Right: Activities --}}
+    {{-- Right: Timeline + Notes + Activities --}}
     <div class="col-lg-7">
+
+        {{-- Timeline --}}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Timeline</h5>
+            </div>
+            <div class="card-body">
+                @include('deals._timeline', ['timeline' => $timeline])
+            </div>
+        </div>
+
+        {{-- Notes --}}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Notes</h5>
+            </div>
+            <div class="card-body">
+                @include('notes._create', ['subject' => $company])
+                @include('notes._list', ['subject' => $company])
+            </div>
+        </div>
+
+        {{-- Activities --}}
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Activities</h5>
             </div>
             <div class="card-body">
-                {{-- Create form --}}
                 @include('activities._create', ['subject' => $company])
-
-                {{-- List --}}
                 @include('activities._list', ['subject' => $company])
             </div>
         </div>
+
     </div>
 </div>
 @endsection

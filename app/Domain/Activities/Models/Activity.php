@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+
 class Activity extends Model
 {
     use HasFactory, SoftDeletes;
@@ -31,10 +32,13 @@ class Activity extends Model
         'extra',
     ];
 
+    
+
     protected $casts = [
         'due_at' => 'datetime',
         'done_at' => 'datetime',
         'extra' => 'array',
+        'due_date' => 'datetime',
     ];
 
     /** -----------------------
@@ -69,5 +73,9 @@ class Activity extends Model
     public function deal()
     {
         return $this->belongsTo(Deal::class);
+    }
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
     }
 }

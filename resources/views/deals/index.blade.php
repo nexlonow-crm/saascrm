@@ -28,7 +28,13 @@
       <tbody>
         @forelse($deals as $deal)
         <tr>
-          <td>{{ $deal->title }}</td>
+          <td>
+             <a href="{{ route('deals.show', $deal) }}">
+                 {{ $deal->title }}
+            </a>
+         
+        
+          </td>
           <td>{{ optional($deal->company)->name }}</td>
           <td>{{ optional($deal->primaryContact)->full_name }}</td>
           <td>

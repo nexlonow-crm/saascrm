@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Note;
 
 class Deal extends Model
 {
@@ -87,4 +88,12 @@ class Deal extends Model
     {
         return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
     }
+
+    public function notes()
+    {
+        return $this->morphMany(Note::class, 'subject')
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at');
+    }
+
 }

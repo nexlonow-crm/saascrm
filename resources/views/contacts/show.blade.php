@@ -80,18 +80,39 @@
 
     {{-- Right: Activities --}}
     <div class="col-lg-7">
+        {{-- Timeline --}}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Timeline</h5>
+            </div>
+            <div class="card-body">
+                @include('deals._timeline', ['timeline' => $timeline])
+            </div>
+        </div>
+
+        {{-- Notes (optional, if you want separate card like deals) --}}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Notes</h5>
+            </div>
+            <div class="card-body">
+                @include('notes._create', ['subject' => $contact])
+                @include('notes._list', ['subject' => $contact])
+            </div>
+        </div>
+
+        {{-- Activities --}}
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Activities</h5>
             </div>
             <div class="card-body">
-                {{-- Create form --}}
                 @include('activities._create', ['subject' => $contact])
-
-                {{-- List --}}
                 @include('activities._list', ['subject' => $contact])
             </div>
         </div>
+
     </div>
+
 </div>
 @endsection

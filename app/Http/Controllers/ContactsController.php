@@ -6,7 +6,7 @@ use App\Domain\Contacts\Models\Contact;
 use App\Domain\Companies\Models\Company;
 use Illuminate\Http\Request;
 use App\Notifications\ContactCreatedNotification;
-
+use App\Models\Activity;
 
 
 class ContactsController extends Controller
@@ -24,21 +24,7 @@ class ContactsController extends Controller
         return view('contacts.index', compact('contacts'));
     }
 
-    public function show(Contact $contact)
-    {
-        // Optional: if you have something like authorizeContact()
-        if (method_exists($this, 'authorizeContact')) {
-            $this->authorizeContact($contact);
-        }
-
-        $contact->load([
-            'company',
-            'deals.stage',        // if you have deals relation
-            'activities.owner',   // activity + assigned user
-        ]);
-
-        return view('contacts.show', compact('contact'));
-    }
+    
 
     public function create()
     {
@@ -152,6 +138,46 @@ class ContactsController extends Controller
         if ($contact->account_id !== $user->account_id || $contact->tenant_id !== $user->tenant_id) {
             abort(403);
         }
+    }
+
+    public function show(Contact $contact)
+    {
+        // Optional: if you have something like authorizeContact()
+        if (method_exists($this, 'authorizeContact')) {
+            $this->authorizeContact($contact);
+        }
+
+        $contact->load([
+            'company',
+            'deals.stage',        // if you have deals relation
+            'activities.owner',   // activity + assigned user
+            'notes.user',
+        ]);
+
+        // Build combined timeline
+        $timeline = $contact->activities->map(function ($activity) {
+            return [
+                'kind'  => 'activity',
+                'date'  => $activity->due_date ?? $activity->created_at,
+                'model' => $activity,
+            ];
+        })->merge(
+            $contact->notes->map(function ($note) {
+                return [
+                    'kind'  => 'note',
+                    'date'  => $note->created_at,
+                    'model' => $note,
+                ];
+            })
+        )->sortByDesc('date')->values();
+
+        return view('contacts.show', [
+            'contact'  => $contact,
+            'timeline' => $timeline,
+        ]);
+
+        
+        
     }
 
     

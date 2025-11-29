@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Note;
 
 class Contact extends Model
 {
@@ -67,15 +68,8 @@ class Contact extends Model
         return $this->belongsTo(Company::class);
     }
 
-    // public function activities()
-    // {
-    //     return $this->hasMany(Activity::class);
-    // }
-    public function activities()
-    {
-        return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
-    }
-
+  
+    
     public function deals()
     {
         return $this->hasMany(Deal::class, 'primary_contact_id');
@@ -97,5 +91,18 @@ class Contact extends Model
     public function scopeForTenant($query, $tenantId)
     {
         return $query->where('tenant_id', $tenantId);
+    }
+
+    public function activities()
+    {
+        return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
+    }
+
+
+    public function notes()
+    {
+        return $this->morphMany(Note::class, 'subject')
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at');
     }
 }

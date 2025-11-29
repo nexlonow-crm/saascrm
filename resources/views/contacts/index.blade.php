@@ -27,7 +27,11 @@
       <tbody>
         @forelse($contacts as $contact)
         <tr>
-          <td>{{ $contact->full_name }}</td>
+          <td>
+            <a href="{{ route('contacts.show', $contact) }}">
+                {{ $contact->full_name }}
+            </a>
+          </td>
           <td>{{ optional($contact->company)->name }}</td>
           <td>{{ $contact->email }}</td>
           <td>{{ $contact->phone }}</td>

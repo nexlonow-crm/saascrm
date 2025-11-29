@@ -34,7 +34,11 @@
       <tbody>
         @forelse($companies as $companie)
         <tr>
-          <td>{{ $companie->name }}</td>
+          <td>
+            <a href="{{ route('companies.show', $companie) }}">
+                {{ $companie->name }}
+            </a>
+          </td>
           <td>{{ $companie->domain }}</td>
           <td>{{ $companie->website }}</td>
           <td>{{ $companie->phone }}</td>

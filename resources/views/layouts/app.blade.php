@@ -13,6 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     @stack('styles')
 
     <style>
@@ -61,10 +63,6 @@
         }
 
     </style>
-
-   =
-
-
 </head>
 
 <body>
@@ -125,6 +123,12 @@
                                 <a class="sidebar-link" href="{{ route('deals.index') }}">
                                     <i class="align-middle" data-feather="dollar-sign"></i>
                                     <span class="align-middle">Deals</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" href="{{ route('deals.board') }}">
+                                    <i class="align-middle" data-feather="columns"></i>
+                                    <span class="align-middle">Deals Board</span>
                                 </a>
                             </li>
                         @endif

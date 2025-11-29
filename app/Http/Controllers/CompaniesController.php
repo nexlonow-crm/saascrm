@@ -114,13 +114,39 @@ class CompaniesController extends Controller
             $this->authorizeCompany($company);
         }
 
+        // Eager load relations we need
         $company->load([
             'contacts',
             'deals.stage',
             'activities.owner',
+            'notes.user',
         ]);
 
-        return view('companies.show', compact('company'));
+        // Build a combined timeline of activities + notes
+        $timeline = collect();
+
+        foreach ($company->activities as $activity) {
+            $timeline->push([
+                'kind'  => 'activity',
+                'date'  => $activity->due_date ?? $activity->created_at,
+                'model' => $activity,
+            ]);
+        }
+
+        foreach ($company->notes as $note) {
+            $timeline->push([
+                'kind'  => 'note',
+                'date'  => $note->created_at,
+                'model' => $note,
+            ]);
+        }
+
+        $timeline = $timeline->sortByDesc('date')->values();
+
+        return view('companies.show', [
+            'company'  => $company,
+            'timeline' => $timeline,
+        ]);
     }
     
 }

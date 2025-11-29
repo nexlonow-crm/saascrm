@@ -14,6 +14,8 @@ use App\Notifications\DealWonNotification;
 use App\Models\Activity;
 
 
+
+
 class DealsController extends Controller
 {
     public function index()
@@ -155,18 +157,128 @@ class DealsController extends Controller
             abort(403);
         }
     }
+    
+
+
     public function show(Deal $deal)
     {
-        $this->authorizeDeal($deal); // if you use this
+        $this->authorizeDeal($deal); // keep your existing auth
 
         $deal->load([
             'company',
             'primaryContact',
             'stage',
-            'activities.owner', // eager load owner of each activity
+            'activities.owner',
+            'notes.user',
         ]);
 
-        return view('deals.show', compact('deal'));
+        // Build combined timeline: activities + notes
+        $timeline = $deal->activities->map(function ($activity) {
+            return [
+                'kind'  => 'activity',
+                'date'  => $activity->due_date ?? $activity->created_at,
+                'model' => $activity,
+            ];
+        })->merge(
+            $deal->notes->map(function ($note) {
+                return [
+                    'kind'  => 'note',
+                    'date'  => $note->created_at,
+                    'model' => $note,
+                ];
+            })
+        )->sortByDesc('date')->values();
+
+        return view('deals.show', [
+            'deal'     => $deal,
+            'timeline' => $timeline,
+        ]);
     }
+
+
+    public function board(Request $request)
+    {
+        $user = $request->user();
+
+        $pipelines = Pipeline::where('account_id', $user->account_id)
+            ->where('tenant_id', $user->tenant_id)
+            ->orderBy('name')
+            ->get();
+
+        $pipeline = null;
+
+        if ($request->filled('pipeline_id')) {
+            $pipeline = $pipelines->firstWhere('id', (int) $request->pipeline_id);
+        }
+
+        if (!$pipeline) {
+            $pipeline = $pipelines->firstWhere('is_default', true) ?? $pipelines->first();
+        }
+
+        if (!$pipeline) {
+            return redirect()
+                ->route('pipelines.index')
+                ->with('status', 'Please create a pipeline first.');
+        }
+
+        $pipeline->load([
+            'stages' => function ($q) {
+                $q->orderBy('position');
+            },
+        ]);
+
+        $deals = Deal::where('account_id', $user->account_id)
+            ->where('tenant_id', $user->tenant_id)
+            ->where('pipeline_id', $pipeline->id)
+            ->with(['company', 'primaryContact', 'stage'])
+            ->orderByDesc('updated_at')
+            ->get()
+            ->groupBy('stage_id');
+
+        return view('deals.board', [
+            'pipeline'     => $pipeline,
+            'pipelines'    => $pipelines,
+            'dealsByStage' => $deals,
+        ]);
+    }
+
+    public function moveOnBoard(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'deal_id'  => ['required', 'integer'],
+            'stage_id' => ['required', 'integer'],
+        ]);
+
+        $deal = Deal::where('account_id', $user->account_id)
+            ->where('tenant_id', $user->tenant_id)
+            ->where('id', $data['deal_id'])
+            ->firstOrFail();
+
+        $stage = \App\Domain\Deals\Models\Stage::where('account_id', $user->account_id)
+            ->where('tenant_id', $user->tenant_id)
+            ->where('id', $data['stage_id'])
+            ->firstOrFail();
+
+        if ($stage->pipeline_id !== $deal->pipeline_id) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Stage does not belong to the same pipeline.',
+            ], 422);
+        }
+
+        $deal->stage_id = $stage->id;
+        $deal->save();
+
+        return response()->json([
+            'ok'      => true,
+            'message' => 'Deal moved.',
+        ]);
+    }
+
+
+
+
 
 }

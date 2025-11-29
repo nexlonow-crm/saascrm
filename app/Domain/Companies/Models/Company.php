@@ -11,6 +11,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Domain\Activities\Models\Activity; 
+use App\Models\Note; 
+
+
 class Company extends Model
 {
     use HasFactory, SoftDeletes;
@@ -74,9 +78,19 @@ class Company extends Model
     {
         return $query->where('tenant_id', $tenantId);
     }
+
     public function activities()
     {
-        return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
+        return $this->morphMany(Activity::class, 'subject')
+            ->orderBy('due_date');
     }
+    
+    public function notes()
+    {
+        return $this->morphMany(Note::class, 'subject')
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at');
+    }
+
 
 }

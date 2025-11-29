@@ -42,19 +42,43 @@
     </div>
 
     {{-- Right: Activities --}}
-    <div class="col-lg-7">
-        <div class="card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Activities</h5>
-            </div>
-            <div class="card-body">
-                {{-- Create form --}}
-                @include('activities._create', ['subject' => $deal])
+    {{-- Right: Timeline + Notes + Activities --}}
+<div class="col-lg-7">
 
-                {{-- List --}}
-                @include('activities._list', ['subject' => $deal])
-            </div>
+    {{-- Timeline --}}
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Timeline</h5>
+        </div>
+        <div class="card-body">
+            @include('deals._timeline', ['timeline' => $timeline])
         </div>
     </div>
+
+    {{-- Notes --}}
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Notes</h5>
+        </div>
+        <div class="card-body">
+            @include('notes._create', ['subject' => $deal])
+            @include('notes._list', ['subject' => $deal])
+        </div>
+    </div>
+
+    {{-- Activities --}}
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Activities</h5>
+        </div>
+        <div class="card-body">
+            @include('activities._create', ['subject' => $deal])
+            @include('activities._list', ['subject' => $deal])
+        </div>
+    </div>
+
+</div>
+
+
 </div>
 @endsection

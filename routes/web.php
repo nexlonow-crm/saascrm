@@ -2,16 +2,15 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\CompaniesController;
 use App\Http\Controllers\DealsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
-
 use App\Http\Controllers\PipelinesController;
 use App\Http\Controllers\PipelineStageController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\NoteController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -31,27 +30,33 @@ require __DIR__.'/auth.php';
 
 
 Route::middleware(['auth', 'tenant'])->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::resource('contacts', ContactsController::class);
-    Route::resource('companies', CompaniesController::class);
-    Route::resource('deals', DealsController::class);
-    Route::resource('activities', ActivityController::class);
-
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-   
 
+    // Kanban board
+    Route::get('/deals/board', [DealsController::class, 'board'])
+        ->name('deals.board');
+        
+    // Core resources
     Route::resource('contacts', ContactsController::class);
     Route::resource('companies', CompaniesController::class);
-
- 
     Route::resource('deals', DealsController::class);
 
+    // Activities
+    Route::resource('activities', ActivityController::class)->only(['index', 'show']); // optional
+    Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
+    Route::put('/activities/{activity}', [ActivityController::class, 'update'])->name('activities.update');
+    Route::delete('/activities/{activity}', [ActivityController::class, 'destroy'])->name('activities.destroy');
+
+    // Notes
+    Route::post('/notes', [NoteController::class, 'store'])->name('notes.store');
+    Route::delete('/notes/{note}', [NoteController::class, 'destroy'])->name('notes.destroy');
+
+    // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
 
-
-     // Pipelines CRUD
+    // Pipelines CRUD
     Route::resource('pipelines', PipelinesController::class);
 
     // Stages inside a pipeline
@@ -65,19 +70,15 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         ->name('pipelines.stages.destroy');
 
     Route::post('pipelines/{pipeline}/stages/reorder', [PipelineStageController::class, 'reorder'])
-    ->name('pipelines.stages.reorder');
+        ->name('pipelines.stages.reorder');
 
     
-    
-    // Activity
-    Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
-    Route::put('/activities/{activity}', [ActivityController::class, 'update'])->name('activities.update');
-    Route::delete('/activities/{activity}', [ActivityController::class, 'destroy'])->name('activities.destroy');
 
-
-   
-        
+    // AJAX move endpoint for drag-and-drop
+    Route::post('/deals/kanban/move', [DealsController::class, 'moveOnBoard'])
+        ->name('deals.kanban.move');
 });
+
 
 
 
