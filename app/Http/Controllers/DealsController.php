@@ -195,52 +195,65 @@ class DealsController extends Controller
         ]);
     }
 
-
     public function board(Request $request)
-    {
-        $user = $request->user();
+{
+    $user = $request->user();
 
-        $pipelines = Pipeline::where('account_id', $user->account_id)
-            ->where('tenant_id', $user->tenant_id)
-            ->orderBy('name')
-            ->get();
+    // All pipelines for this account/tenant (for dropdown)
+    $pipelines = Pipeline::where('account_id', $user->account_id)
+        ->where('tenant_id', $user->tenant_id)
+        ->orderBy('name')
+        ->get();
 
-        $pipeline = null;
+    // Determine active pipeline: from query or default
+    $pipeline = null;
 
-        if ($request->filled('pipeline_id')) {
-            $pipeline = $pipelines->firstWhere('id', (int) $request->pipeline_id);
-        }
-
-        if (!$pipeline) {
-            $pipeline = $pipelines->firstWhere('is_default', true) ?? $pipelines->first();
-        }
-
-        if (!$pipeline) {
-            return redirect()
-                ->route('pipelines.index')
-                ->with('status', 'Please create a pipeline first.');
-        }
-
-        $pipeline->load([
-            'stages' => function ($q) {
-                $q->orderBy('position');
-            },
-        ]);
-
-        $deals = Deal::where('account_id', $user->account_id)
-            ->where('tenant_id', $user->tenant_id)
-            ->where('pipeline_id', $pipeline->id)
-            ->with(['company', 'primaryContact', 'stage'])
-            ->orderByDesc('updated_at')
-            ->get()
-            ->groupBy('stage_id');
-
-        return view('deals.board', [
-            'pipeline'     => $pipeline,
-            'pipelines'    => $pipelines,
-            'dealsByStage' => $deals,
-        ]);
+    if ($request->filled('pipeline_id')) {
+        $pipeline = $pipelines->firstWhere('id', (int) $request->pipeline_id);
     }
+
+    if (!$pipeline) {
+        $pipeline = $pipelines->firstWhere('is_default', true) ?? $pipelines->first();
+    }
+
+    if (!$pipeline) {
+        return redirect()
+            ->route('pipelines.index')
+            ->with('status', 'Please create a pipeline first.');
+    }
+
+    // Status filter: all / open / won / lost
+    $status = $request->get('status', 'all'); // default: all
+
+    // Load stages for this pipeline
+    $pipeline->load([
+        'stages' => function ($q) {
+            $q->orderBy('position');
+        },
+    ]);
+
+    // Base query
+    $dealsQuery = Deal::where('account_id', $user->account_id)
+        ->where('tenant_id', $user->tenant_id)
+        ->where('pipeline_id', $pipeline->id)
+        ->with(['company', 'primaryContact', 'stage'])
+        ->orderByDesc('updated_at');
+
+    if (in_array($status, ['open', 'won', 'lost'], true)) {
+        $dealsQuery->where('status', $status);
+    }
+
+    $deals = $dealsQuery->get()->groupBy('stage_id'); // stage_id => Collection<Deal>
+
+    return view('deals.board', [
+        'pipeline'     => $pipeline,
+        'pipelines'    => $pipelines,
+        'dealsByStage' => $deals,
+        'status'       => $status,
+    ]);
+}
+
+
 
     public function moveOnBoard(Request $request)
     {
@@ -256,10 +269,13 @@ class DealsController extends Controller
             ->where('id', $data['deal_id'])
             ->firstOrFail();
 
-        $stage = \App\Domain\Deals\Models\Stage::where('account_id', $user->account_id)
-            ->where('tenant_id', $user->tenant_id)
-            ->where('id', $data['stage_id'])
-            ->firstOrFail();
+        // $stage = \App\Domain\Deals\Models\Stage::where('account_id', $user->account_id)
+        //     ->where('tenant_id', $user->tenant_id)
+        //     ->where('id', $data['stage_id'])
+        //     ->firstOrFail();
+
+        $stage = Stage::where('id', $data['stage_id'])->firstOrFail();
+                        
 
         if ($stage->pipeline_id !== $deal->pipeline_id) {
             return response()->json([

@@ -16,9 +16,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -32,10 +32,15 @@ require __DIR__.'/auth.php';
 Route::middleware(['auth', 'tenant'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
+    
     // Kanban board
     Route::get('/deals/board', [DealsController::class, 'board'])
         ->name('deals.board');
+
+    
+    // AJAX move endpoint for drag-and-drop
+    Route::post('/deals/kanban/move', [DealsController::class, 'moveOnBoard'])
+        ->name('deals.kanban.move');
         
     // Core resources
     Route::resource('contacts', ContactsController::class);
@@ -74,9 +79,6 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     
 
-    // AJAX move endpoint for drag-and-drop
-    Route::post('/deals/kanban/move', [DealsController::class, 'moveOnBoard'])
-        ->name('deals.kanban.move');
 });
 
 
