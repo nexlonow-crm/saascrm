@@ -6,41 +6,37 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('activities', function (Blueprint $table) {
-            $table->id();
+        $table->id();
 
-            // Ownership / tenancy
-            $table->foreignId('account_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete(); // who created / owns activity
+        // Polymorphic association
+        $table->morphs('subject'); // subject_id + subject_type (Contact/Company/Deal)
 
-            // Links to CRM records (all optional)
-            $table->foreignId('contact_id')->nullable()->constrained('contacts')->nullOnDelete();
-            $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
-            $table->foreignId('deal_id')->nullable()->constrained('deals')->nullOnDelete();
+        $table->unsignedBigInteger('account_id');
+        $table->unsignedBigInteger('tenant_id');
 
-            // Core fields
-            $table->string('subject')->nullable();  // short title
-            $table->string('type')->default('note'); // note, call, meeting, task, email, other
-            $table->text('body')->nullable();
+        $table->unsignedBigInteger('owner_id')->nullable(); // assigned to
 
-            // Scheduling
-            $table->timestamp('due_at')->nullable();  // for tasks/meetings
-            $table->timestamp('done_at')->nullable(); // when completed
+        $table->string('type'); // task, call, meeting, email
+        $table->string('title');
+        $table->text('notes')->nullable();
 
-            // Flexible extra data (JSON)
-            $table->json('extra')->nullable();
+        $table->dateTime('due_date')->nullable();
+        $table->boolean('is_completed')->default(false);
 
-            $table->timestamps();
-            $table->softDeletes();
+        $table->timestamps();
+    });
 
-            $table->index(['account_id', 'tenant_id']);
-            $table->index(['type', 'due_at']);
-        });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('activities');
