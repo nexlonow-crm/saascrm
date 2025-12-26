@@ -11,6 +11,7 @@ use App\Http\Controllers\PipelinesController;
 use App\Http\Controllers\PipelineStageController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\DashboardApiController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -76,7 +77,15 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     Route::post('pipelines/{pipeline}/stages/reorder', [PipelineStageController::class, 'reorder'])
         ->name('pipelines.stages.reorder');
+    
 
+    // 
+    Route::prefix('api/dashboard')->group(function () {
+    Route::get('/kpis', [DashboardApiController::class, 'kpis'])->name('api.dashboard.kpis');
+    Route::get('/deals-by-stage', [DashboardApiController::class, 'dealsByStage'])->name('api.dashboard.dealsByStage');
+    Route::get('/deals-trend', [DashboardApiController::class, 'dealsTrend'])->name('api.dashboard.dealsTrend');
+    Route::get('/activities-summary', [DashboardApiController::class, 'activitiesSummary'])->name('api.dashboard.activitiesSummary');
+});
     
 
 });
