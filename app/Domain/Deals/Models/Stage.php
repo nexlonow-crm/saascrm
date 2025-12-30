@@ -2,31 +2,23 @@
 
 namespace App\Domain\Deals\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToWorkspace;
 
 class Stage extends Model
 {
-    use HasFactory;
+    use BelongsToWorkspace;
 
-    protected $fillable = [
-        'pipeline_id',
-        'name',
-        'label',
-        'badge_color',
-        'probability',
-        'position',
+    protected $fillable = ['workspace_id','pipeline_id','name','probability','position'];
+
+    protected $casts = [
+        'probability' => 'integer',
+        'position' => 'integer',
     ];
 
-    // Helper: return a safe badge color
-    public function badgeColor(): string
+    public function workspace()
     {
-        return $this->badge_color ?: 'secondary';
-    }
-    // Helper: what text to show inside badge
-    public function displayName(): string
-    {
-        return $this->label ?: $this->name;
+        return $this->belongsTo(Workspace::class);
     }
 
     public function pipeline()

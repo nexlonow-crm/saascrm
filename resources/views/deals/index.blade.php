@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4 mb-0">Deals</h1>
-  <a href="{{ route('deals.create') }}" class="btn btn-primary">Add Deal</a>
+  <a href="{{ ws_route('deals.create') }}" class="btn btn-primary">Add Deal</a>
 </div>
 
 @if(session('status'))
@@ -29,7 +29,7 @@
         @forelse($deals as $deal)
         <tr>
           <td>
-             <a href="{{ route('deals.show', $deal) }}">
+             <a href="{{ ws_route('deals.show', $deal) }}">
                  {{ $deal->title }}
             </a>
          
@@ -62,8 +62,8 @@
           </td>
           <td>{{ optional($deal->expected_close_date)->format('Y-m-d') }}</td>
           <td class="text-end">
-            <a href="{{ route('deals.edit', $deal) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-            <form action="{{ route('deals.destroy', $deal) }}" method="POST" class="d-inline">
+            <a href="{{ ws_route('deals.edit', $deal) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <form action="{{ ws_route('deals.destroy', $deal) }}" method="POST" class="d-inline">
               @csrf
               @method('DELETE')
               <button class="btn btn-sm btn-outline-danger"

@@ -14,7 +14,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0">Pipeline: {{ $pipeline->name }}</h5>
 
-    <form method="GET" action="{{ route('deals.board') }}" class="row g-2 align-items-center">
+    <form method="GET" action="{{ ws_route('deals.board') }}" class="row g-2 align-items-center">
         <div class="col-auto">
             <label class="me-1 mb-0 small text-muted">Pipeline</label>
             <select name="pipeline_id" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -90,7 +90,7 @@
                                     <div class="d-flex justify-content-between align-items-start mb-1">
                                         <div>
                                             <strong class="small">
-                                                <a href="{{ route('deals.show', $deal) }}">
+                                                <a href="{{ ws_route('deals.show', $deal) }}">
                                                     {{ $deal->title }}
                                                 </a>
                                             </strong>
@@ -146,7 +146,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const moveUrl = "{{ route('deals.kanban.move') }}";
+            const moveUrl = "{{ ws_route('deals.kanban.move') }}";
 
             const stageElems = document.querySelectorAll('.kanban-stage');
 

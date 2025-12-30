@@ -7,7 +7,7 @@
 @section('content')
 <div class="card">
     <div class="card-body">
-        <form method="POST" action="{{ route('deals.update', $deal) }}">
+        <form method="POST" action="{{ ws_route('deals.update', $deal) }}">
             @csrf
             @method('PUT')
             @include('deals._form', [

@@ -2,60 +2,35 @@
 
 namespace App\Domain\Contacts\Models;
 
-
-use App\Domain\Companies\Models\Company;
-use App\Domain\Deals\Models\Deal;
-use App\Domain\Activities\Models\Activity;
-use App\Models\Account;
-use App\Models\Tenant;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Note;
+use App\Models\Concerns\BelongsToWorkspace;
 
 class Contact extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes, BelongsToWorkspace;
 
     protected $fillable = [
-        'account_id',
-        'tenant_id',
-        'owner_id',
-        'company_id',
-        'first_name',
-        'last_name',
-        'email',
-        'phone',
-        'mobile',
-        'job_title',
-        'street',
-        'city',
-        'state',
-        'postal_code',
-        'country',
-        'lifecycle_stage',
-        'lead_source',
-        'status',
-        'extra',
+        'workspace_id','owner_id','company_id',
+        'first_name','last_name','email','phone','mobile','job_title',
+        'street','city','state','postal_code','country',
+        'lifecycle_stage','lead_source','status','extra'
     ];
 
     protected $casts = [
         'extra' => 'array',
     ];
 
-    /** -----------------------
-     *  Relationships
-     * ------------------------ */
+    protected $appends = ['full_name'];
 
-    public function account()
+    public function getFullNameAttribute(): string
     {
-        return $this->belongsTo(Account::class);
+        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
     }
 
-    public function tenant()
+    public function workspace()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(Workspace::class);
     }
 
     public function owner()
@@ -68,41 +43,18 @@ class Contact extends Model
         return $this->belongsTo(Company::class);
     }
 
-  
-    
     public function deals()
     {
         return $this->hasMany(Deal::class, 'primary_contact_id');
     }
 
-    /** -----------------------
-     *  Accessors / Helpers
-     * ------------------------ */
-
-    public function getFullNameAttribute()
+    public function notes()
     {
-        return trim($this->first_name . ' ' . $this->last_name);
-    }
-
-    /** -----------------------
-     *  Scopes
-     * ------------------------ */
-
-    public function scopeForTenant($query, $tenantId)
-    {
-        return $query->where('tenant_id', $tenantId);
+        return $this->morphMany(Note::class, 'subject');
     }
 
     public function activities()
     {
-        return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
-    }
-
-
-    public function notes()
-    {
-        return $this->morphMany(Note::class, 'subject')
-            ->orderByDesc('is_pinned')
-            ->orderByDesc('created_at');
+        return $this->morphMany(Activity::class, 'subject');
     }
 }

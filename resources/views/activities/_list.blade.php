@@ -25,7 +25,7 @@
                     {{-- Simple complete toggle (optional later) --}}
                     {{-- Delete --}}
                     <form method="POST"
-                          action="{{ route('activities.destroy', $activity) }}"
+                          action="{{ ws_route('activities.destroy', $activity) }}"
                           onsubmit="return confirm('Delete this activity?');">
                         @csrf
                         @method('DELETE')

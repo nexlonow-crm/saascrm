@@ -1,4 +1,4 @@
-<form method="POST" action="{{ route('activities.store') }}" class="row g-2 mb-3">
+<form method="POST" action="{{ ws_route('activities.store') }}" class="row g-2 mb-3">
     @csrf
 
     <input type="hidden" name="subject_type" value="{{ get_class($subject) }}">

@@ -6,23 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void
-    {
+    {  
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
 
-            // Polymorphic subject (Deal, Contact, Company, etc.)
             $table->morphs('subject'); // subject_type, subject_id
 
-            $table->unsignedBigInteger('account_id');
-            $table->unsignedBigInteger('tenant_id');
-            $table->unsignedBigInteger('user_id'); // author/creator
+            $table->foreignId('workspace_id')
+                ->constrained('workspaces')
+                ->cascadeOnDelete();
+
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
 
             $table->text('body');
             $table->boolean('is_pinned')->default(false);
 
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['workspace_id', 'subject_type', 'subject_id']);
+            $table->index(['workspace_id', 'user_id']);
         });
+
+
     }
 
     public function down(): void

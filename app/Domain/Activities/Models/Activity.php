@@ -1,81 +1,36 @@
 <?php
-
 namespace App\Domain\Activities\Models;
 
-use App\Domain\Contacts\Models\Contact;
-use App\Domain\Companies\Models\Company;
-use App\Domain\Deals\Models\Deal;
-use App\Models\Account;
-use App\Models\Tenant;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\Concerns\BelongsToWorkspace;
 
 class Activity extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToWorkspace;
 
     protected $fillable = [
-        'account_id',
-        'tenant_id',
-        'user_id',
-        'contact_id',
-        'company_id',
-        'deal_id',
-        'subject',
-        'type',
-        'body',
-        'due_at',
-        'done_at',
-        'extra',
+        'workspace_id','owner_id',
+        'subject_type','subject_id',
+        'type','title','notes','due_date','is_completed'
     ];
-
-    
 
     protected $casts = [
-        'due_at' => 'datetime',
-        'done_at' => 'datetime',
-        'extra' => 'array',
         'due_date' => 'datetime',
+        'is_completed' => 'boolean',
     ];
 
-    /** -----------------------
-     *  Relationships
-     * ------------------------ */
-
-    public function account()
+    public function workspace()
     {
-        return $this->belongsTo(Account::class);
+        return $this->belongsTo(Workspace::class);
     }
 
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function contact()
-    {
-        return $this->belongsTo(Contact::class);
-    }
-
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
-    }
-
-    public function deal()
-    {
-        return $this->belongsTo(Deal::class);
-    }
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function subject()
+    {
+        return $this->morphTo();
     }
 }

@@ -74,7 +74,7 @@
         <nav id="sidebar" class="sidebar js-sidebar">
             <div class="sidebar-content js-simplebar">
 
-                <a class="sidebar-brand" href="{{ route('dashboard') }}">
+                <a class="sidebar-brand" href="{{ ws_route('dashboard') }}">
                     <span class="align-middle">{{ config('app.name') }}</span>
                 </a>
 
@@ -82,7 +82,7 @@
                     <li class="sidebar-header">CRM</li>
 
                     <li class="sidebar-item">
-                        <a class="sidebar-link" href="{{ route('dashboard') }}">
+                        <a class="sidebar-link" href="{{ ws_route('dashboard') }}">
                             <i class="align-middle" data-feather="sliders"></i>
                             <span class="align-middle">Dashboard</span>
                         </a>
@@ -91,7 +91,7 @@
                     {{-- Contacts (all plans in our config) --}}
                     @if(isset($currentTenant) && $currentTenant->hasFeature('contacts'))
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="{{ route('contacts.index') }}">
+                            <a class="sidebar-link" href="{{ ws_route('contacts.index') }}">
                                 <i class="align-middle" data-feather="users"></i>
                                 <span class="align-middle">Contacts</span>
                             </a>
@@ -101,7 +101,7 @@
                     {{-- Companies --}}
                     @if(isset($currentTenant) && $currentTenant->hasFeature('companies'))
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="{{ route('companies.index') }}">
+                            <a class="sidebar-link" href="{{ ws_route('companies.index') }}">
                                 <i class="align-middle" data-feather="briefcase"></i>
                                 <span class="align-middle">Companies</span>
                             </a>
@@ -120,13 +120,13 @@
 
                         @if($currentTenant->hasFeature('deals.basic') && RouteFacade::has('deals.index'))
                             <li class="sidebar-item">
-                                <a class="sidebar-link" href="{{ route('deals.index') }}">
+                                <a class="sidebar-link" href="{{ ws_route('deals.index') }}">
                                     <i class="align-middle" data-feather="dollar-sign"></i>
                                     <span class="align-middle">Deals</span>
                                 </a>
                             </li>
                             <li class="sidebar-item">
-                                <a class="sidebar-link" href="{{ route('deals.board') }}">
+                                <a class="sidebar-link" href="{{ ws_route('deals.board') }}">
                                     <i class="align-middle" data-feather="columns"></i>
                                     <span class="align-middle">Deals Board</span>
                                 </a>
@@ -135,7 +135,7 @@
 
                         @if($currentTenant->hasFeature('pipelines.basic') && RouteFacade::has('pipelines.index'))
                             <li class="sidebar-item">
-                                <a class="sidebar-link" href="{{ route('pipelines.index') }}">
+                                <a class="sidebar-link" href="{{ ws_route('pipelines.index') }}">
                                     <i class="align-middle" data-feather="git-branch"></i>
                                     <span class="align-middle">Pipelines</span>
                                 </a>
@@ -144,7 +144,7 @@
 
                         @if($currentTenant->hasFeature('pipelines.basic') && RouteFacade::has('pipelines.index'))
                             <li class="sidebar-item">
-                                <a class="sidebar-link" href="{{ route('activities.index') }}">
+                                <a class="sidebar-link" href="{{ ws_route('activities.index') }}">
                                     <i class="align-middle" data-feather="check-square"></i>
                                     <span class="align-middle">Activities</span>
                                 </a>
@@ -160,7 +160,7 @@
                     {{-- Inventory only for Pro + Enterprise --}}
                     @if(isset($currentTenant) && $currentTenant->hasFeature('inventory'))
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="{{ route('inventory.index') }}">
+                            <a class="sidebar-link" href="{{ ws_route('inventory.index') }}">
                                 <i class="align-middle" data-feather="truck"></i>
                                 <span class="align-middle">Inventory</span>
                             </a>
@@ -170,7 +170,7 @@
                     {{-- HR only for Enterprise --}}
                     @if(isset($currentTenant) && $currentTenant->hasFeature('hr'))
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="{{ route('hr.employees.index') }}">
+                            <a class="sidebar-link" href="{{ ws_route('hr.employees.index') }}">
                                 <i class="align-middle" data-feather="users"></i>
                                 <span class="align-middle">HR & Team</span>
                             </a>
@@ -180,7 +180,7 @@
                     {{-- Accounting only for Enterprise --}}
                     @if(isset($currentTenant) && $currentTenant->hasFeature('accounting'))
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="{{ route('accounting.dashboard') }}">
+                            <a class="sidebar-link" href="{{ ws_route('accounting.dashboard') }}">
                                 <i class="align-middle" data-feather="file-text"></i>
                                 <span class="align-middle">Accounting</span>
                             </a>
@@ -253,12 +253,12 @@
                                     @endforelse
                                 </div>
                                 <div class="dropdown-menu-footer d-flex justify-content-between align-items-center">
-                                    <a href="{{ route('notifications.index') }}" class="text-muted small px-3 py-2">
+                                    <a href="{{ ws_route('notifications.index') }}" class="text-muted small px-3 py-2">
                                         View all
                                     </a>
 
                                     @if($unreadCount > 0)
-                                        <form method="POST" action="{{ route('notifications.readAll') }}" class="px-3 py-2">
+                                        <form method="POST" action="{{ ws_route('notifications.readAll') }}" class="px-3 py-2">
                                             @csrf
                                             <button class="btn btn-link btn-sm p-0">
                                                 Mark all as read
@@ -295,13 +295,13 @@
 
                                 {{-- optional profile link if route exists --}}
                                 @if(\Illuminate\Support\Facades\Route::has('profile.show'))
-                                    <a class="dropdown-item" href="{{ route('profile.show') }}">
+                                    <a class="dropdown-item" href="{{ ws_route('profile.show') }}">
                                         <i class="align-middle me-1" data-feather="user"></i> Profile
                                     </a>
                                     <div class="dropdown-divider"></div>
                                 @endif
 
-                                <form method="POST" action="{{ route('logout') }}">
+                                <form method="POST" action="{{ ws_route('logout') }}">
                                     @csrf
                                     <button class="dropdown-item">
                                         <i class="align-middle me-1" data-feather="log-out"></i> Logout

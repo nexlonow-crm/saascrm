@@ -2,35 +2,22 @@
 
 namespace App\Domain\Deals\Models;
 
-use App\Models\Account;
-use App\Models\Tenant;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToWorkspace;
 
 class Pipeline extends Model
 {
-    use HasFactory;
+    use BelongsToWorkspace;
 
-    protected $fillable = [
-        'account_id',
-        'tenant_id',
-        'name',
-        'type',
-        'is_default',
-    ];
+    protected $fillable = ['workspace_id','name','is_default','type'];
 
     protected $casts = [
         'is_default' => 'boolean',
     ];
 
-    public function account()
+    public function workspace()
     {
-        return $this->belongsTo(Account::class);
-    }
-
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(Workspace::class);
     }
 
     public function stages()

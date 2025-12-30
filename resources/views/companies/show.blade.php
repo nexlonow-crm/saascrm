@@ -52,7 +52,7 @@
                     <ul class="list-group list-group-flush">
                         @foreach($company->contacts as $contact)
                             <li class="list-group-item px-0">
-                                <a href="{{ route('contacts.show', $contact) }}">
+                                <a href="{{ ws_route('contacts.show', $contact) }}">
                                     {{ $contact->full_name ?? ($contact->first_name.' '.$contact->last_name) }}
                                 </a>
                                 @if($contact->email)
@@ -76,7 +76,7 @@
                         @foreach($company->deals as $deal)
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                 <div>
-                                    <a href="{{ route('deals.show', $deal) }}">
+                                    <a href="{{ ws_route('deals.show', $deal) }}">
                                         {{ $deal->title }}
                                     </a>
                                     @if($deal->stage)

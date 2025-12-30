@@ -7,7 +7,7 @@
       <div class="card-body">
         <h1 class="h5 mb-3">Add Company</h1>
 
-        <form method="POST" action="{{ route('companies.store') }}">
+        <form method="POST" action="{{ ws_route('companies.store') }}">
           @include('companies._form', ['company' => null, 'submitLabel' => 'Save Company'])
         </form>
       </div>

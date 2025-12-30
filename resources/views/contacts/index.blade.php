@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4 mb-0">Contacts</h1>
-  <a href="{{ route('contacts.create') }}" class="btn btn-primary">Add Contact</a>
+  <a href="{{ ws_route('contacts.create') }}" class="btn btn-primary">Add Contact</a>
 </div>
 
 @if(session('status'))
@@ -28,7 +28,7 @@
         @forelse($contacts as $contact)
         <tr>
           <td>
-            <a href="{{ route('contacts.show', $contact) }}">
+            <a href="{{ ws_route('contacts.show', $contact) }}">
                 {{ $contact->full_name }}
             </a>
           </td>
@@ -38,8 +38,8 @@
           <td>{{ $contact->lifecycle_stage }}</td>
           <td>{{ $contact->created_at->format('Y-m-d') }}</td>
           <td class="text-end">
-            <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-            <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-inline">
+            <a href="{{ ws_route('contacts.edit', $contact) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <form action="{{ ws_route('contacts.destroy', $contact) }}" method="POST" class="d-inline">
               @csrf
               @method('DELETE')
               <button class="btn btn-sm btn-outline-danger"

@@ -131,4 +131,4 @@
 </div>
 
 <button type="submit" class="btn btn-primary">{{ $submitLabel }}</button>
-<a href="{{ route('contacts.index') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+<a href="{{ ws_route('contacts.index') }}" class="btn btn-outline-secondary ms-2">Cancel</a>

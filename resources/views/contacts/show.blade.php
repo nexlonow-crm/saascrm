@@ -58,7 +58,7 @@
                         @foreach($contact->deals as $deal)
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                 <div>
-                                    <a href="{{ route('deals.show', $deal) }}">
+                                    <a href="{{ ws_route('deals.show', $deal) }}">
                                         {{ $deal->title }}
                                     </a>
                                     @if($deal->stage)

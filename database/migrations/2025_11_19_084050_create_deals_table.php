@@ -11,38 +11,33 @@ return new class extends Migration
         Schema::create('deals', function (Blueprint $table) {
             $table->id();
 
-            // Ownership / tenancy
-            $table->foreignId('account_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('workspace_id')->constrained('workspaces')->cascadeOnDelete();
             $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
 
-            // Pipeline & stage
             $table->foreignId('pipeline_id')->constrained('pipelines')->cascadeOnDelete();
             $table->foreignId('stage_id')->constrained('stages')->cascadeOnDelete();
 
-            // Relations
             $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->foreignId('primary_contact_id')->nullable()->constrained('contacts')->nullOnDelete();
 
-            // Core fields
-            $table->string('title');                   // "Website redesign for ACME"
+            $table->string('title');
             $table->decimal('amount', 15, 2)->nullable();
             $table->string('currency', 3)->default('USD');
 
-            // Status & dates
-            $table->string('status')->default('open'); // open, won, lost
+            $table->string('status')->default('open');
             $table->date('expected_close_date')->nullable();
             $table->timestamp('closed_at')->nullable();
 
-            // Flexible extra data (JSON)
             $table->json('extra')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['account_id', 'tenant_id']);
-            $table->index(['status', 'expected_close_date']);
+            $table->index(['workspace_id', 'status', 'expected_close_date']);
+            $table->index(['workspace_id', 'pipeline_id', 'stage_id']);
+            $table->index(['workspace_id', 'owner_id']);
         });
+
     }
 
     public function down(): void

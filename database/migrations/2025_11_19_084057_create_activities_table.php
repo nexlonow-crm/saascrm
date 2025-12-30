@@ -12,25 +12,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('activities', function (Blueprint $table) {
-        $table->id();
+            $table->id();
 
-        // Polymorphic association
-        $table->morphs('subject'); // subject_id + subject_type (Contact/Company/Deal)
+            $table->morphs('subject'); // subject_type, subject_id
 
-        $table->unsignedBigInteger('account_id');
-        $table->unsignedBigInteger('tenant_id');
+            $table->foreignId('workspace_id')->constrained('workspaces')->cascadeOnDelete();
+            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
 
-        $table->unsignedBigInteger('owner_id')->nullable(); // assigned to
+            $table->string('type'); // task, call, meeting, email
+            $table->string('title');
+            $table->text('notes')->nullable();
 
-        $table->string('type'); // task, call, meeting, email
-        $table->string('title');
-        $table->text('notes')->nullable();
+            $table->dateTime('due_date')->nullable();
+            $table->boolean('is_completed')->default(false);
 
-        $table->dateTime('due_date')->nullable();
-        $table->boolean('is_completed')->default(false);
+            $table->timestamps();
 
-        $table->timestamps();
-    });
+            $table->index(['workspace_id', 'subject_type', 'subject_id']);
+            $table->index(['workspace_id', 'due_date', 'is_completed']);
+            $table->index(['workspace_id', 'owner_id', 'is_completed']);
+        });
+
 
     }
 

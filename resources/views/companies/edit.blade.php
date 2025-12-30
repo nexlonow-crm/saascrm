@@ -7,7 +7,7 @@
       <div class="card-body">
         <h1 class="h5 mb-3">Edit Company</h1>
 
-        <form method="POST" action="{{ route('companies.update', $company) }}">
+        <form method="POST" action="{{ ws_route('companies.update', $company) }}">
           @method('PUT')
           @include('companies._form', ['company' => $company, 'submitLabel' => 'Update Company'])
         </form>

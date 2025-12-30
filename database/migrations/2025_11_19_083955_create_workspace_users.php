@@ -11,28 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pipelines', function (Blueprint $table) {
+        Schema::create('workspace_users', function (Blueprint $table) {
             $table->id();
-
             $table->foreignId('workspace_id')->constrained('workspaces')->cascadeOnDelete();
-
-            $table->string('name');
-            $table->boolean('is_default')->default(false);
-            $table->string('type')->nullable();
-
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('role')->default('admin'); // owner, executive, manager, rep, viewer
             $table->timestamps();
-
-            $table->index(['workspace_id', 'is_default']);
+            $table->unique(['workspace_id', 'user_id']);
         });
 
     }
-
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('pipelines');
+        Schema::dropIfExists('workspace_users');
     }
 };

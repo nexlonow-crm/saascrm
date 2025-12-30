@@ -2,40 +2,19 @@
 
 namespace App\Domain\Deals\Models;
 
-use App\Domain\Companies\Models\Company;
-use App\Domain\Contacts\Models\Contact;
-use App\Domain\Activities\Models\Activity;
-use App\Models\Account;
-use App\Models\Tenant;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Note;
+use App\Models\Concerns\BelongsToWorkspace;
 
 class Deal extends Model
 {
-    use HasFactory, SoftDeletes;
-
-    public const STATUS_OPEN = 'open';
-    public const STATUS_WON  = 'won';
-    public const STATUS_LOST = 'lost';
+    use SoftDeletes, BelongsToWorkspace;
 
     protected $fillable = [
-        'account_id',
-        'tenant_id',
-        'owner_id',
-        'pipeline_id',
-        'stage_id',
-        'company_id',
-        'primary_contact_id',
-        'title',
-        'amount',
-        'currency',
-        'status',
-        'expected_close_date',
-        'closed_at',
-        'extra',
+        'workspace_id','owner_id','pipeline_id','stage_id',
+        'company_id','primary_contact_id',
+        'title','amount','currency','status',
+        'expected_close_date','closed_at','extra'
     ];
 
     protected $casts = [
@@ -45,18 +24,9 @@ class Deal extends Model
         'extra' => 'array',
     ];
 
-    /** -----------------------
-     *  Relationships
-     * ------------------------ */
-
-    public function account()
+    public function workspace()
     {
-        return $this->belongsTo(Account::class);
-    }
-
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(Workspace::class);
     }
 
     public function owner()
@@ -84,16 +54,13 @@ class Deal extends Model
         return $this->belongsTo(Contact::class, 'primary_contact_id');
     }
 
-    public function activities()
-    {
-        return $this->morphMany(Activity::class, 'subject')->orderBy('due_date');
-    }
-
     public function notes()
     {
-        return $this->morphMany(Note::class, 'subject')
-            ->orderByDesc('is_pinned')
-            ->orderByDesc('created_at');
+        return $this->morphMany(Note::class, 'subject');
     }
 
+    public function activities()
+    {
+        return $this->morphMany(Activity::class, 'subject');
+    }
 }

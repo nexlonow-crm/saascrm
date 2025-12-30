@@ -4,29 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
+use App\Models\Concerns\BelongsToWorkspace;
 
 class Note extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToWorkspace;
 
     protected $fillable = [
-        'account_id',
-        'tenant_id',
-        'subject_id',
-        'subject_type',
-        'user_id',
-        'body',
-        'is_pinned',
+        'workspace_id','user_id','subject_type','subject_id','body','is_pinned'
     ];
 
-    public function subject()
+    protected $casts = [
+        'is_pinned' => 'boolean',
+    ];
+
+    public function workspace()
     {
-        return $this->morphTo();
+        return $this->belongsTo(Workspace::class);
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function subject()
+    {
+        return $this->morphTo();
     }
 }

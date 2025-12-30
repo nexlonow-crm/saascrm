@@ -41,7 +41,7 @@
                         </td>
                         <td class="text-end">
                             <form method="POST"
-                                action="{{ route('activities.destroy', $activity) }}">
+                                action="{{ ws_ws_route('activities.destroy', $activity) }}">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-outline-danger">

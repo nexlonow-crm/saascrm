@@ -13,51 +13,40 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('companies', function (Blueprint $table) {
-            // Primary key
             $table->id();
 
-            // Foreign keys / ownership
-            $table->foreignId('account_id')
-                ->constrained('accounts')           // assumes "accounts" table
+            $table->foreignId('workspace_id')
+                ->constrained('workspaces')
                 ->cascadeOnDelete();
 
-            $table->foreignId('tenant_id')
-                ->nullable()
-                ->constrained('tenants')            // assumes "tenants" table
-                ->cascadeOnDelete();
-
-            // Owner (account manager)
             $table->foreignId('owner_id')
                 ->nullable()
-                ->constrained('users')              // assumes "users" table for account managers
+                ->constrained('users')
                 ->nullOnDelete();
 
-            // Core
             $table->string('name');
-            $table->string('domain')->nullable();   // e.g. "example.com"
+            $table->string('domain')->nullable();
             $table->string('website')->nullable();
             $table->string('phone')->nullable();
             $table->string('industry')->nullable();
-            $table->string('size')->nullable();     // e.g. "1-10", "11-50"
+            $table->string('size')->nullable();
 
-            // Address
             $table->string('street')->nullable();
             $table->string('city')->nullable();
             $table->string('state')->nullable();
             $table->string('postal_code')->nullable();
             $table->string('country')->nullable();
 
-            // Extra JSON
             $table->json('extra')->nullable();
 
-            // Audit
             $table->timestamps();
             $table->softDeletes();
 
-            // Optional useful indexes
-            $table->index('domain');
-            $table->index('tenant_id');
+            $table->index(['workspace_id', 'name']);
+            $table->index(['workspace_id', 'owner_id']);
+            $table->index(['workspace_id', 'domain']);
         });
+
     }
 
     /**

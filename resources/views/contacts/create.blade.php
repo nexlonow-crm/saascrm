@@ -7,7 +7,7 @@
       <div class="card-body">
         <h1 class="h5 mb-3">Add Contact</h1>
 
-        <form method="POST" action="{{ route('contacts.store') }}">
+        <form method="POST" action="{{ ws_route('contacts.store') }}">
           @include('contacts._form', ['contact' => null, 'submitLabel' => 'Save Contact'])
         </form>
       </div>
