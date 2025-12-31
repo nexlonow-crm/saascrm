@@ -2,15 +2,34 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class WorkspaceModule extends Pivot
+class Workspace extends Model
 {
-    protected $table = 'workspace_modules';
+    use SoftDeletes;
 
-    protected $casts = [
-        'is_enabled' => 'boolean',
+    protected $fillable = [
+        'account_id',
+        'name',
+        'slug',
+        'status',
+        'industry_key',
+        'timezone',
+        'currency',
+        'owner_user_id',
     ];
 
-    protected $fillable = ['workspace_id','module_id','is_enabled','disabled_reason'];
+    // Use slug in routes
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'workspace_users')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
 }

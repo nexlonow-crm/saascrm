@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Middleware;
-
+use App\Models\Workspace;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,19 +15,20 @@ class SetWorkspace
      */
     public function handle($request, Closure $next)
     {
-        /** @var \App\Models\Workspace $workspace */
         $workspace = $request->route('workspace');
 
-        abort_if(!$workspace, 404);
+        // ✅ If binding failed and we got slug string, resolve manually
+        if (is_string($workspace)) {
+            $workspace = Workspace::where('slug', $workspace)->firstOrFail();
+        }
+
         abort_if($workspace->status !== 'active', 403);
 
         $user = $request->user();
-
         $isMember = $workspace->users()->where('users.id', $user->id)->exists();
         abort_unless($isMember, 403);
 
         app()->instance('currentWorkspace', $workspace);
-        $request->attributes->set('currentWorkspace', $workspace);
 
         return $next($request);
     }

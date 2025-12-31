@@ -25,39 +25,38 @@ Route::get('/', function () {
 
 require __DIR__.'/auth.php';
 
+
+// Workspace creation (no workspace required)
+Route::middleware('auth')->group(function () {
+    Route::get('/workspaces/create', [\App\Http\Controllers\WorkspaceController::class, 'create'])
+        ->name('workspaces.create');
+
+    Route::post('/workspaces', [\App\Http\Controllers\WorkspaceController::class, 'store'])
+        ->name('workspaces.store');
+});
+
+
 /*
 |--------------------------------------------------------------------------
 | Auth (no workspace required)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
 
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+Route::middleware('auth')->get('/app', function () {
+    $user = auth()->user();
 
-    // ✅ ENTRY ROUTE:
-    // If logged in + has workspace -> redirect to /w/{workspace}/dashboard
-    // If logged in + no workspace -> redirect to create workspace screen
-    Route::get('/app', function () {
-        $user = auth()->user();
+    // Workspaces via pivot table
+    $workspace = $user->workspaces()->orderBy('workspaces.id')->first();
 
-        // Adjust this to your relationship / query
-        // Example: user has many workspaces
-        $workspace = $user->workspaces()->first();
+    if (!$workspace) {
+        return redirect()->route('workspaces.create');
+    }
 
-        if (! $workspace) {
-            return redirect()->route('workspaces.create');
-        }
+    return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
+})->name('app');
 
-        return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
-    })->name('app');
 
-    // ✅ Workspace create flow (no {workspace} needed)
-    Route::get('/workspaces/create', [WorkspaceController::class, 'create'])->name('workspaces.create');
-    Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
-});
+
 
 /*
 |--------------------------------------------------------------------------
@@ -67,7 +66,6 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'workspace'])
     ->prefix('w/{workspace:slug}')
     ->group(function () {
-
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/deals/board', [DealsController::class, 'board'])->name('deals.board');

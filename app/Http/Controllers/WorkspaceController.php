@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Models\Workspace;
 
 class WorkspaceController extends Controller
 {
@@ -19,25 +19,42 @@ class WorkspaceController extends Controller
             'name' => ['required', 'string', 'max:255'],
         ]);
 
-        $slug = Str::slug($request->name);
+        $user = auth()->user();
 
-        // Ensure unique slug (simple approach)
-        $original = $slug;
-        $i = 1;
-        while (Workspace::where('slug', $slug)->exists()) {
-            $slug = $original . '-' . $i++;
+        // 🔹 Get or create account (depends on your setup)
+        $accountId = auth()->user()->account_id; // ✅ now always exists after register
+
+        if (!$accountId) {
+            abort(400, 'No account found for user');
         }
 
+        // 🔹 Generate unique slug
+        $baseSlug = Str::slug($request->name);
+        $slug = $baseSlug;
+        $i = 1;
+
+        while (Workspace::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
+        }
+
+        // 🔹 Create workspace
         $workspace = Workspace::create([
+            'account_id' => $accountId,
             'name' => $request->name,
             'slug' => $slug,
-            'owner_id' => auth()->id(),
+            'owner_user_id' => $user->id,
+            'status' => 'active',
         ]);
 
-        // Attach user to workspace depending on your schema
-        // If you have pivot:
-        // $workspace->users()->attach(auth()->id(), ['role' => 'owner']);
+        // 🔹 Attach user as owner
+        $workspace->users()->attach($user->id, [
+            'role' => 'owner',
+        ]);
 
-        return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
+
+        // 🔹 Redirect to workspace dashboard
+        return redirect()->route('dashboard', [
+            'workspace' => $workspace->slug,
+        ]);
     }
 }

@@ -56,4 +56,8 @@ class Workspace extends Model
             ->withPivot(['is_enabled', 'disabled_reason'])
             ->withTimestamps();
     }
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
 }
