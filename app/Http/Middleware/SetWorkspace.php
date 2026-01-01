@@ -17,9 +17,9 @@ class SetWorkspace
     {
         $workspace = $request->route('workspace');
 
-        // ✅ If binding failed and we got slug string, resolve manually
+        // (keep your fallback if you added it)
         if (is_string($workspace)) {
-            $workspace = Workspace::where('slug', $workspace)->firstOrFail();
+            $workspace = \App\Models\Workspace::where('slug', $workspace)->firstOrFail();
         }
 
         abort_if($workspace->status !== 'active', 403);
@@ -30,7 +30,13 @@ class SetWorkspace
 
         app()->instance('currentWorkspace', $workspace);
 
+        // ✅ Save last active workspace (avoid extra writes)
+        if ($user && $user->last_workspace_id !== $workspace->id) {
+            $user->forceFill(['last_workspace_id' => $workspace->id])->save();
+        }
+
         return $next($request);
     }
+
 
 }

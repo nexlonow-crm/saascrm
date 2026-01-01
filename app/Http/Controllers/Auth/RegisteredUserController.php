@@ -42,7 +42,7 @@ class RegisteredUserController extends Controller
             // 1) Create Account
             $account = Account::create([
                 'name' => $request->name . "'s Account",
-                'plan' => 'free',
+                'plan' => config('plans.default_plan'),  // ✅ always "free"
                 'is_active' => true,
             ]);
 

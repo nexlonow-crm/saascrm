@@ -31,8 +31,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/workspaces/create', [\App\Http\Controllers\WorkspaceController::class, 'create'])
         ->name('workspaces.create');
 
+    Route::get('/workspaces', [WorkspaceController::class, 'index'])
+        ->name('workspaces.index');
+
     Route::post('/workspaces', [\App\Http\Controllers\WorkspaceController::class, 'store'])
         ->name('workspaces.store');
+
+    Route::post('/workspaces/switch', [WorkspaceController::class, 'switch'])
+        ->name('workspaces.switch');
+
+
 });
 
 
@@ -45,7 +53,18 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->get('/app', function () {
     $user = auth()->user();
 
-    // Workspaces via pivot table
+    // 1) Prefer last active workspace if still valid membership
+    if ($user->last_workspace_id) {
+        $last = $user->workspaces()
+            ->where('workspaces.id', $user->last_workspace_id)
+            ->first();
+
+        if ($last) {
+            return redirect()->route('dashboard', ['workspace' => $last->slug]);
+        }
+    }
+
+    // 2) Otherwise fallback to first workspace
     $workspace = $user->workspaces()->orderBy('workspaces.id')->first();
 
     if (!$workspace) {
@@ -54,8 +73,6 @@ Route::middleware('auth')->get('/app', function () {
 
     return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
 })->name('app');
-
-
 
 
 /*
@@ -68,12 +85,19 @@ Route::middleware(['auth', 'workspace'])
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        Route::get('/deals/board', [DealsController::class, 'board'])->name('deals.board');
+       
+        Route::get('/deals/board', [DealsController::class, 'board'])
+            ->name('deals.board')
+            ->middleware('feature:deals.basic');
+
         Route::post('/deals/kanban/move', [DealsController::class, 'moveOnBoard'])->name('deals.kanban.move');
 
-        Route::resource('contacts', ContactsController::class);
-        Route::resource('companies', CompaniesController::class);
-        Route::resource('deals', DealsController::class);
+        Route::resource('contacts', ContactsController::class)->middleware('feature:contacts');
+        Route::resource('companies', CompaniesController::class)->middleware('feature:companies');;
+        Route::resource('deals', DealsController::class)->middleware('feature:deals.basic');
+        Route::resource('pipelines', PipelinesController::class)
+            ->middleware('feature:pipelines.basic');
+
 
         Route::resource('activities', ActivityController::class)->only(['index', 'show']);
         Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
@@ -86,7 +110,7 @@ Route::middleware(['auth', 'workspace'])
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
 
-        Route::resource('pipelines', PipelinesController::class);
+        
 
         Route::post('pipelines/{pipeline}/stages', [PipelineStageController::class, 'store'])->name('pipelines.stages.store');
         Route::put('pipelines/{pipeline}/stages/{stage}', [PipelineStageController::class, 'update'])->name('pipelines.stages.update');

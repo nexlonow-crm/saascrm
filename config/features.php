@@ -10,6 +10,7 @@ return [
             'companies',
             'deals.basic',
             'pipelines.basic',
+            'deals.basic',
         ],
 
         // PRO plan

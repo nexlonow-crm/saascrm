@@ -14,8 +14,8 @@ class Workspace extends Model
     ];
 
     public function account()
-    {
-        return $this->belongsTo(Account::class);
+    {       
+        return $this->belongsTo(\App\Models\Account::class);
     }
 
     public function owner()
@@ -60,4 +60,22 @@ class Workspace extends Model
     {
         return 'slug';
     }
+    public function hasFeature(string $feature): bool
+    {
+        // ✅ if plan is null, fallback to default_plan
+        $plan = $this->account?->plan ?: config('plans.default_plan');
+
+        $planFeatures = config("plans.plans.$plan", []);
+
+        return in_array($feature, $planFeatures, true);
+    }
+
+    public function hasAnyFeature(array $features): bool
+    {
+        foreach ($features as $f) {
+            if ($this->hasFeature($f)) return true;
+        }
+        return false;
+    }
+
 }

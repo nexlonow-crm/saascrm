@@ -70,8 +70,18 @@
                     </a>
                 </li>
 
+                
+
+                
                 {{-- Workspace-only menu --}}
                 @if(auth()->check() && $ws)
+
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="{{ route('workspaces.index') }}">
+                            <i class="align-middle" data-feather="sliders"></i>
+                            <span class="align-middle">Workspaces</span>
+                        </a>
+                    </li>
 
                     {{-- Contacts --}}
                     @if(method_exists($ws, 'hasFeature') && $ws->hasFeature('contacts'))
@@ -199,6 +209,9 @@
                 <i class="hamburger align-self-center"></i>
             </a>
 
+            
+
+
             <div class="navbar-collapse collapse">
                 @php
                     $navbarUser = auth()->user();
@@ -211,6 +224,57 @@
                 @endphp
 
                 <ul class="navbar-nav ms-auto navbar-align">
+
+                    <!--  -->
+                    @auth
+                        @php
+                            $navbarUser = auth()->user();
+                            $userWorkspaces = $navbarUser->workspaces()->orderBy('name')->get();
+                            $currentWs = app()->bound('currentWorkspace') ? app('currentWorkspace') : null;
+                        @endphp
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+                                <i class="align-middle me-1" data-feather="grid"></i>
+                                <span class="text-dark">
+                                    {{ $currentWs?->name ?? 'Select Workspace' }}
+                                </span>
+                            </a>
+
+                            <div class="dropdown-menu dropdown-menu-end">
+                                @if($currentWs)
+                                    <div class="dropdown-item-text small">
+                                        <div class="fw-bold">Current</div>
+                                        <div class="text-muted">{{ $currentWs->name }}</div>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                @endif
+
+                                {{-- Switch workspace (POST) --}}
+                                @foreach($userWorkspaces as $ws)
+                                    <form method="POST" action="{{ route('workspaces.switch') }}">
+                                        @csrf
+                                        <input type="hidden" name="workspace_id" value="{{ $ws->id }}">
+                                        <button type="submit"
+                                                class="dropdown-item {{ $currentWs && $currentWs->id === $ws->id ? 'active' : '' }}">
+                                            {{ $ws->name }}
+                                            <div class="text-muted small">{{ $ws->slug }}</div>
+                                        </button>
+                                    </form>
+                                @endforeach
+
+                                <div class="dropdown-divider"></div>
+
+                                <a class="dropdown-item" href="{{ route('workspaces.index') }}">
+                                    <i class="align-middle me-1" data-feather="list"></i> Manage Workspaces
+                                </a>
+
+                                <a class="dropdown-item" href="{{ route('workspaces.create') }}">
+                                    <i class="align-middle me-1" data-feather="plus"></i> Create Workspace
+                                </a>
+                            </div>
+                        </li>
+                    @endauth
 
                     {{-- Notifications dropdown (workspace-only) --}}
                     @auth
