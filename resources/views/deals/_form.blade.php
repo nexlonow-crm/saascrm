@@ -126,17 +126,7 @@
 
     <div class="col-md-6">
         <div class="mb-3">
-            <label class="form-label">Status</label>
-            @php
-                $statusValue = old('status', $deal->status ?? \App\Domain\Deals\Models\Deal::STATUS_OPEN);
-            @endphp
-            <select name="status" class="form-select">
-                <option value="open" @selected($statusValue === 'open')>Open</option>
-                <option value="won" @selected($statusValue === 'won')>Won</option>
-                <option value="lost" @selected($statusValue === 'lost')>Lost</option>
-            </select>
-            @error('status')<div class="text-danger small">{{ $message }}</div>@enderror
-        </div>
+            
     </div>
 </div>
 

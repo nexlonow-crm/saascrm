@@ -6,17 +6,19 @@ use App\Domain\Contacts\Models\Contact;
 use App\Domain\Companies\Models\Company;
 use Illuminate\Http\Request;
 use App\Notifications\ContactCreatedNotification;
-use App\Models\Activity;
-
 
 class ContactsController extends Controller
 {
+    private function ws()
+    {
+        return app('currentWorkspace'); // set by SetWorkspace middleware
+    }
+
     public function index()
     {
-        $user = auth()->user();
+        $ws = $this->ws();
 
-        $contacts = Contact::where('account_id', $user->account_id)
-            ->where('tenant_id', $user->tenant_id)
+        $contacts = Contact::where('workspace_id', $ws->id)
             ->with('company')
             ->latest()
             ->paginate(15);
@@ -24,14 +26,11 @@ class ContactsController extends Controller
         return view('contacts.index', compact('contacts'));
     }
 
-    
-
     public function create()
     {
-        $user = auth()->user();
+        $ws = $this->ws();
 
-        $companies = Company::where('account_id', $user->account_id)
-            ->where('tenant_id', $user->tenant_id)
+        $companies = Company::where('workspace_id', $ws->id)
             ->orderBy('name')
             ->get();
 
@@ -40,10 +39,11 @@ class ContactsController extends Controller
 
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $ws = $this->ws();
+        $user = $request->user();
 
         $data = $request->validate([
-            'company_id'      => ['nullable', 'exists:companies,id'],
+            'company_id'      => ['nullable', 'integer'],
             'first_name'      => ['required', 'string', 'max:255'],
             'last_name'       => ['required', 'string', 'max:255'],
             'email'           => ['nullable', 'email'],
@@ -60,31 +60,32 @@ class ContactsController extends Controller
             'status'          => ['nullable', 'string', 'max:50'],
         ]);
 
-        $data['account_id'] = $user->account_id;
-        $data['tenant_id']  = $user->tenant_id;
-        $data['owner_id']   = $user->id;
-        $data['status']     = $data['status'] ?? 'active';
+        // ✅ company must belong to workspace
+        if (!empty($data['company_id'])) {
+            Company::where('workspace_id', $ws->id)
+                ->where('id', $data['company_id'])
+                ->firstOrFail();
+        }
 
-        
+        $data['workspace_id'] = $ws->id;
+        $data['owner_id']     = $user->id;
+        $data['status']       = $data['status'] ?? 'active';
+
         $contact = Contact::create($data);
 
-        // notify the current user (or account owner etc.)
         $user->notify(new ContactCreatedNotification($contact));
-        
 
         return redirect()
-            ->route('contacts.index')
+            ->route('contacts.index', ['workspace' => $ws->slug])
             ->with('status', 'Contact created successfully.');
     }
 
     public function edit(Contact $contact)
     {
-        $this->authorizeContact($contact);
+        $ws = $this->ws();
+        $this->authorizeContact($contact, $ws);
 
-        $user = auth()->user();
-
-        $companies = Company::where('account_id', $user->account_id)
-            ->where('tenant_id', $user->tenant_id)
+        $companies = Company::where('workspace_id', $ws->id)
             ->orderBy('name')
             ->get();
 
@@ -93,10 +94,11 @@ class ContactsController extends Controller
 
     public function update(Request $request, Contact $contact)
     {
-        $this->authorizeContact($contact);
+        $ws = $this->ws();
+        $this->authorizeContact($contact, $ws);
 
         $data = $request->validate([
-            'company_id'      => ['nullable', 'exists:companies,id'],
+            'company_id'      => ['nullable', 'integer'],
             'first_name'      => ['required', 'string', 'max:255'],
             'last_name'       => ['required', 'string', 'max:255'],
             'email'           => ['nullable', 'email'],
@@ -113,48 +115,51 @@ class ContactsController extends Controller
             'status'          => ['nullable', 'string', 'max:50'],
         ]);
 
+        // ✅ company must belong to workspace
+        if (!empty($data['company_id'])) {
+            Company::where('workspace_id', $ws->id)
+                ->where('id', $data['company_id'])
+                ->firstOrFail();
+        }
+
         $contact->update($data);
 
         return redirect()
-            ->route('contacts.index')
+            ->route('contacts.index', ['workspace' => $ws->slug])
             ->with('status', 'Contact updated successfully.');
     }
 
     public function destroy(Contact $contact)
     {
-        $this->authorizeContact($contact);
+        $ws = $this->ws();
+        $this->authorizeContact($contact, $ws);
 
         $contact->delete();
 
         return redirect()
-            ->route('contacts.index')
+            ->route('contacts.index', ['workspace' => $ws->slug])
             ->with('status', 'Contact deleted.');
     }
 
-    protected function authorizeContact(Contact $contact): void
+    protected function authorizeContact(Contact $contact, $ws): void
     {
-        $user = auth()->user();
-
-        if ($contact->account_id !== $user->account_id || $contact->tenant_id !== $user->tenant_id) {
+        if ((int) $contact->workspace_id !== (int) $ws->id) {
             abort(403);
         }
     }
 
     public function show(Contact $contact)
     {
-        // Optional: if you have something like authorizeContact()
-        if (method_exists($this, 'authorizeContact')) {
-            $this->authorizeContact($contact);
-        }
+        $ws = $this->ws();
+        $this->authorizeContact($contact, $ws);
 
         $contact->load([
             'company',
-            'deals.stage',        // if you have deals relation
-            'activities.owner',   // activity + assigned user
+            'deals.stage',
+            'activities.owner',
             'notes.user',
         ]);
 
-        // Build combined timeline
         $timeline = $contact->activities->map(function ($activity) {
             return [
                 'kind'  => 'activity',
@@ -175,10 +180,5 @@ class ContactsController extends Controller
             'contact'  => $contact,
             'timeline' => $timeline,
         ]);
-
-        
-        
     }
-
-    
 }

@@ -8,18 +8,32 @@ use Illuminate\Http\Request;
 
 class PipelineStageController extends Controller
 {
-    protected function authorizePipeline(Pipeline $pipeline): void
+    private function ws()
     {
-        $user = auth()->user();
-
-        if ($pipeline->account_id !== $user->account_id || $pipeline->tenant_id !== $user->tenant_id) {
-            abort(403);
-        }
+        return app('currentWorkspace'); // set by SetWorkspace middleware
     }
 
-    public function store(Request $request, Pipeline $pipeline)
+    private function findPipelineOrFail($pipelineId): Pipeline
     {
-        $this->authorizePipeline($pipeline);
+        $ws = $this->ws();
+
+        return Pipeline::where('workspace_id', $ws->id)
+            ->where('id', $pipelineId)
+            ->firstOrFail();
+    }
+
+    private function findStageOrFail(Pipeline $pipeline, $stageId): Stage
+    {
+        return Stage::where('workspace_id', $pipeline->workspace_id)
+            ->where('pipeline_id', $pipeline->id)
+            ->where('id', $stageId)
+            ->firstOrFail();
+    }
+
+    // POST w/{workspace}/pipelines/{pipeline}/stages
+    public function store(Request $request, $workspace, $pipeline)
+    {
+        $pipeline = $this->findPipelineOrFail($pipeline);
 
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
@@ -31,32 +45,32 @@ class PipelineStageController extends Controller
         $maxPosition = $pipeline->stages()->max('position') ?? 0;
 
         $pipeline->stages()->create([
-            'name'        => $data['name'],
-            'label'       => $data['label'] ?? null,
-            'badge_color' => $data['badge_color'] ?? null,
-            'probability' => $data['probability'] ?? null,
-            'position'    => $maxPosition + 1,
+            'workspace_id' => $pipeline->workspace_id,
+            'name'         => $data['name'],
+            'label'        => $data['label'] ?? null,
+            'badge_color'  => $data['badge_color'] ?? null,
+            'probability'  => $data['probability'] ?? null,
+            'position'     => $maxPosition + 1,
         ]);
 
         return back()->with('status', 'Stage added.');
     }
 
-    public function update(Request $request, Pipeline $pipeline, Stage $stage)
+    // PUT w/{workspace}/pipelines/{pipeline}/stages/{stage}
+    public function update(Request $request, $workspace, $pipeline, $stage)
     {
-        $this->authorizePipeline($pipeline);
-
-        if ($stage->pipeline_id !== $pipeline->id) {
-            abort(403);
-        }
+        $pipeline = $this->findPipelineOrFail($pipeline);
+        $stage = $this->findStageOrFail($pipeline, $stage);
 
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
             'label'       => ['nullable', 'string', 'max:255'],
             'badge_color' => ['nullable', 'string', 'max:20'],
             'probability' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'position'    => ['nullable', 'integer', 'min:0'],
+            'position'    => ['nullable', 'integer', 'min:1'],
         ]);
 
+        // Keep position unchanged if not sent
         if (!array_key_exists('position', $data)) {
             $data['position'] = $stage->position;
         }
@@ -66,18 +80,14 @@ class PipelineStageController extends Controller
         return back()->with('status', 'Stage updated.');
     }
 
-
-
-    public function destroy(Pipeline $pipeline, Stage $stage)
+    // DELETE w/{workspace}/pipelines/{pipeline}/stages/{stage}
+    public function destroy($workspace, $pipeline, $stage)
     {
-        $this->authorizePipeline($pipeline);
+        $pipeline = $this->findPipelineOrFail($pipeline);
+        $stage = $this->findStageOrFail($pipeline, $stage);
 
-        if ($stage->pipeline_id !== $pipeline->id) {
-            abort(403);
-        }
-
-        // Optionally prevent delete if deals exist in this stage
-        if ($stage->deals()->exists()) {
+        // Prevent delete if deals exist in this stage
+        if (method_exists($stage, 'deals') && $stage->deals()->exists()) {
             return back()->withErrors('Cannot delete stage that has deals.');
         }
 
@@ -86,26 +96,34 @@ class PipelineStageController extends Controller
         return back()->with('status', 'Stage deleted.');
     }
 
-    public function reorder(Request $request, Pipeline $pipeline)
+    // POST w/{workspace}/pipelines/{pipeline}/stages/reorder
+    public function reorder(Request $request, $workspace, $pipeline)
     {
-        $this->authorizePipeline($pipeline);
+        $pipeline = $this->findPipelineOrFail($pipeline);
 
         $order = $request->input('order'); // e.g. "5,3,2,7"
         if (!$order) {
             return back()->with('status', 'Nothing to reorder.');
         }
 
-        $ids = array_filter(explode(',', $order));
+        $ids = array_values(array_filter(array_map('trim', explode(',', $order))));
+        if (empty($ids)) {
+            return back()->with('status', 'Nothing to reorder.');
+        }
+
+        // Only stages that belong to this pipeline + workspace
+        $stages = Stage::where('workspace_id', $pipeline->workspace_id)
+            ->where('pipeline_id', $pipeline->id)
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
 
         foreach ($ids as $index => $id) {
-            $stage = $pipeline->stages()->where('id', $id)->first();
-            if ($stage) {
-                $stage->position = $index + 1; // 1-based ordering
-                $stage->save();
+            if (isset($stages[$id])) {
+                $stages[$id]->update(['position' => $index + 1]); // 1-based
             }
         }
 
         return back()->with('status', 'Stage order updated.');
     }
-
 }

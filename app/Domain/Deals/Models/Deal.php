@@ -6,6 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Concerns\BelongsToWorkspace;
 
+use App\Models\User;
+use App\Models\Workspace;
+use App\Domain\Deals\Models\Pipeline;
+use App\Domain\Deals\Models\Stage;
+use App\Domain\Companies\Models\Company;
+use App\Domain\Contacts\Models\Contact;
+use App\Models\Note;
+use App\Domain\Activities\Models\Activity;
+
 class Deal extends Model
 {
     use SoftDeletes, BelongsToWorkspace;

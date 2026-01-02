@@ -82,10 +82,12 @@ Route::middleware('auth')->get('/app', function () {
 */
 Route::middleware(['auth', 'workspace'])
     ->prefix('w/{workspace:slug}')
+     ->scopeBindings()
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-       
+        Route::resource('pipelines', PipelinesController::class);
+
         Route::get('/deals/board', [DealsController::class, 'board'])
             ->name('deals.board')
             ->middleware('feature:deals.basic');
@@ -95,8 +97,7 @@ Route::middleware(['auth', 'workspace'])
         Route::resource('contacts', ContactsController::class)->middleware('feature:contacts');
         Route::resource('companies', CompaniesController::class)->middleware('feature:companies');;
         Route::resource('deals', DealsController::class)->middleware('feature:deals.basic');
-        Route::resource('pipelines', PipelinesController::class)
-            ->middleware('feature:pipelines.basic');
+        // Route::resource('pipelines', PipelinesController::class)->middleware('feature:pipelines.basic');
 
 
         Route::resource('activities', ActivityController::class)->only(['index', 'show']);

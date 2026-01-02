@@ -4,10 +4,12 @@ namespace App\Domain\Deals\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\BelongsToWorkspace;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Stage extends Model
 {
     use BelongsToWorkspace;
+    use SoftDeletes;
 
     protected $fillable = ['workspace_id','pipeline_id','name','probability','position'];
 

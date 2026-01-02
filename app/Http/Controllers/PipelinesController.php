@@ -7,68 +7,87 @@ use Illuminate\Http\Request;
 
 class PipelinesController extends Controller
 {
+    private function ws()
+    {
+        return app('currentWorkspace'); // set by SetWorkspace middleware
+    }
+
+    private function findPipelineOrFail($pipelineId): Pipeline
+    {
+        $ws = $this->ws();
+
+        return Pipeline::withoutGlobalScopes()
+            ->where('workspace_id', $ws->id)
+            ->whereKey($pipelineId)
+            ->firstOrFail();
+    }
+
     public function index(Request $request)
     {
-        $user = $request->user();
+        $ws = $this->ws();
 
-        $pipelines = Pipeline::where('account_id', $user->account_id)
-            ->where('tenant_id', $user->tenant_id)
+        $pipelines = Pipeline::query()
+            ->where('workspace_id', $ws->id)
             ->withCount('stages')
             ->orderBy('name')
             ->paginate(15);
 
-        return view('pipelines.index', compact('pipelines'));
+        return view('pipelines.index', compact('pipelines', 'ws'));
     }
 
     public function create()
     {
-        return view('pipelines.create');
+        $ws = $this->ws();
+        return view('pipelines.create', compact('ws'));
     }
 
     public function store(Request $request)
     {
-        $user = $request->user();
+        $ws = $this->ws();
 
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:255'],
-            'type'       => ['nullable', 'string', 'max:50'], // sales, job_search, etc.
+            'type'       => ['nullable', 'string', 'max:50'],
             'is_default' => ['nullable', 'boolean'],
         ]);
 
-        $data['account_id'] = $user->account_id;
-        $data['tenant_id']  = $user->tenant_id;
+        $data['workspace_id'] = $ws->id;
         $data['is_default'] = $request->boolean('is_default');
 
-        // if this is set as default, unset other defaults for this tenant
         if ($data['is_default']) {
-            Pipeline::where('account_id', $user->account_id)
-                ->where('tenant_id', $user->tenant_id)
-                ->update(['is_default' => false]);
+            Pipeline::where('workspace_id', $ws->id)->update(['is_default' => false]);
         }
 
         $pipeline = Pipeline::create($data);
 
         return redirect()
-            ->route('pipelines.edit', $pipeline)
+            ->route('pipelines.edit', ['workspace' => $ws->slug, 'pipeline' => $pipeline->id])
             ->with('status', 'Pipeline created. You can now add stages.');
     }
 
-    public function edit(Pipeline $pipeline)
+    public function edit($workspace, $pipeline)
     {
-        $this->authorizePipeline($pipeline);
+        $ws = $this->ws();
+
+        $pipeline = Pipeline::where('workspace_id', $ws->id)
+            ->where('id', $pipeline)
+            ->firstOrFail();
 
         $pipeline->load(['stages' => function ($q) {
             $q->orderBy('position');
         }]);
 
-        return view('pipelines.edit', compact('pipeline'));
+        return view('pipelines.edit', compact('pipeline', 'ws'));
     }
 
-    public function update(Request $request, Pipeline $pipeline)
-    {
-        $this->authorizePipeline($pipeline);
 
-        $user = $request->user();
+    public function update(Request $request, $workspace, $pipeline)
+    {
+        $ws = $this->ws();
+
+        $pipeline = Pipeline::where('workspace_id', $ws->id)
+            ->where('id', $pipeline)
+            ->firstOrFail();
 
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:255'],
@@ -79,23 +98,25 @@ class PipelinesController extends Controller
         $data['is_default'] = $request->boolean('is_default');
 
         if ($data['is_default']) {
-            Pipeline::where('account_id', $user->account_id)
-                ->where('tenant_id', $user->tenant_id)
-                ->update(['is_default' => false]);
+            Pipeline::where('workspace_id', $ws->id)->update(['is_default' => false]);
         }
 
         $pipeline->update($data);
 
         return redirect()
-            ->route('pipelines.index')
+            ->route('pipelines.index', ['workspace' => $ws->slug])
             ->with('status', 'Pipeline updated.');
     }
 
-    public function destroy(Pipeline $pipeline)
-    {
-        $this->authorizePipeline($pipeline);
 
-        // You may want to prevent delete if deals exist in this pipeline
+    public function destroy($workspace, $pipeline)
+    {
+        $ws = $this->ws();
+
+        $pipeline = Pipeline::where('workspace_id', $ws->id)
+            ->where('id', $pipeline)
+            ->firstOrFail();
+
         if ($pipeline->deals()->exists()) {
             return back()->withErrors('Cannot delete pipeline that has deals.');
         }
@@ -103,16 +124,8 @@ class PipelinesController extends Controller
         $pipeline->delete();
 
         return redirect()
-            ->route('pipelines.index')
+            ->route('pipelines.index', ['workspace' => $ws->slug])
             ->with('status', 'Pipeline deleted.');
     }
 
-    protected function authorizePipeline(Pipeline $pipeline): void
-    {
-        $user = auth()->user();
-
-        if ($pipeline->account_id !== $user->account_id || $pipeline->tenant_id !== $user->tenant_id) {
-            abort(403);
-        }
-    }
 }

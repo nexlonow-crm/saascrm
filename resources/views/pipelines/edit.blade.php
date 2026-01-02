@@ -1,295 +1,223 @@
 @extends('layouts.app')
 
 @section('title', 'Edit Pipeline')
-@section('page-title', 'Edit Pipeline: '.$pipeline->name)
+
+@section('page-title', 'Edit Pipeline')
 
 @section('content')
-@if(session('status'))
-    <div class="alert alert-success">{{ session('status') }}</div>
-@endif
-@if($errors->any())
-    <div class="alert alert-danger">{{ $errors->first() }}</div>
-@endif
-
-<style>
-    .drag-handle {
-    cursor: grab;
-    padding-left: 6px;
-}
-
-.drag-handle:hover {
-    color: #666;
-}
-</style>
 <div class="row">
-    {{-- Pipeline info --}}
-    <div class="col-lg-4">
-        <div class="card mb-3">
-            <div class="card-header">
+    <div class="col-lg-7">
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Pipeline Details</h5>
+                <a href="{{ route('pipelines.index', ['workspace' => $ws->slug]) }}" class="btn btn-outline-secondary btn-sm">
+                    Back
+                </a>
             </div>
+
             <div class="card-body">
-                <form method="POST" action="{{ route('pipelines.update', $pipeline) }}">
+                @if(session('status'))
+                    <div class="alert alert-success">{{ session('status') }}</div>
+                @endif
+
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <div class="fw-bold mb-1">Please fix the errors:</div>
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $e)
+                                <li>{{ $e }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('pipelines.update', ['workspace' => $ws->slug, 'pipeline' => $pipeline->id]) }}">
                     @csrf
                     @method('PUT')
 
                     <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control"
-                               value="{{ old('name', $pipeline->name) }}" required>
+                        <label class="form-label">Pipeline Name</label>
+                        <input type="text"
+                               name="name"
+                               value="{{ old('name', $pipeline->name) }}"
+                               class="form-control @error('name') is-invalid @enderror"
+                               required>
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Type</label>
-                        <input type="text" name="type" class="form-control"
+                        <label class="form-label">Type (optional)</label>
+                        <input type="text"
+                               name="type"
                                value="{{ old('type', $pipeline->type) }}"
-                               placeholder="sales, job_search, personal, ...">
+                               class="form-control @error('type') is-invalid @enderror"
+                               placeholder="sales / job_search / personal">
+                        @error('type')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox"
-                               id="is_default" name="is_default" value="1"
-                               @checked(old('is_default', $pipeline->is_default))>
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="is_default"
+                               id="is_default"
+                               value="1"
+                               {{ old('is_default', $pipeline->is_default) ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_default">
-                            Set as default pipeline
+                            Set as default pipeline for this workspace
                         </label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">
-                        Save Pipeline
-                    </button>
-                    <a href="{{ route('pipelines.index') }}" class="btn btn-outline-secondary ms-2">
-                        Back
-                    </a>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary">Save Changes</button>
+
+                        <form method="POST"
+                              action="{{ route('pipelines.destroy', ['workspace' => $ws->slug, 'pipeline' => $pipeline->id]) }}"
+                              class="d-inline"
+                              onsubmit="return confirm('Delete this pipeline?');">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-outline-danger">Delete</button>
+                        </form>
+                    </div>
                 </form>
             </div>
         </div>
-    </div>
 
-    {{-- Stages management --}}
-    <div class="col-lg-8">
-        <div class="card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
+        {{-- Stages --}}
+        <div class="card mt-3">
+            <div class="card-header">
                 <h5 class="card-title mb-0">Stages</h5>
             </div>
+
             <div class="card-body">
-
-                {{-- Add new stage --}}
-                <form method="POST" action="{{ route('pipelines.stages.store', $pipeline) }}" class="row g-2 mb-4">
-                    @csrf
-                    <div class="col-md-4">
-                        <input type="text" name="name" class="form-control"
-                               placeholder="Stage name (e.g. Qualified)" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" name="label" class="form-control"
-                               placeholder="Label (Warm, Hot)">
-                    </div>
-                    <div class="col-md-3">
-                        <select name="badge_color" class="form-select">
-                            <option value="">Color</option>
-                            <option value="secondary">Secondary</option>
-                            <option value="primary">Primary</option>
-                            <option value="success">Success</option>
-                            <option value="info">Info</option>
-                            <option value="warning">Warning</option>
-                            <option value="danger">Danger</option>
-                            <option value="dark">Dark</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" name="probability" class="form-control"
-                               placeholder="%" min="0" max="100">
-                    </div>
-                    <div class="col-12 mt-2">
-                        <button class="btn btn-primary btn-sm">Add Stage</button>
-                    </div>
-                </form>
-
-                {{-- Stages list --}}
-                @if($pipeline->stages->count())
-                    <div class="table-responsive mb-3">
+                @if($pipeline->stages->count() === 0)
+                    <div class="text-muted">No stages yet. Add your first stage below.</div>
+                @else
+                    <div class="table-responsive">
                         <table class="table align-middle">
                             <thead>
                                 <tr>
-                                    <th style="width: 40px;"></th> {{-- drag handle --}}
-                                    <th style="width: 80px;">Pos</th>
-                                    <th style="width: 160px;">Name</th>
-                                    <th style="width: 160px;">Label</th>
-                                    <th style="width: 160px;">Color</th>
-                                    <th style="width: 120px;">Prob.</th>
+                                    <th style="width: 60px;">#</th>
+                                    <th>Name</th>
+                                    <th style="width: 150px;">Probability</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="stages-sortable">
-                            @foreach($pipeline->stages as $stage)
-                                {{-- Hidden form for this stage (edit fields) --}}
-                                <form id="stage-{{ $stage->id }}"
-                                      method="POST"
-                                      action="{{ route('pipelines.stages.update', [$pipeline, $stage]) }}">
-                                    @csrf
-                                    @method('PUT')
-                                </form>
-
-                                <tr data-stage-id="{{ $stage->id }}">
-                                    <td class="text-muted drag-handle" style="cursor: grab;">
-                                    <i data-feather="menu"></i>
-                                </td>
-                                    <td>
-                                        <input type="number"
-                                               name="position"
-                                               form="stage-{{ $stage->id }}"
-                                               class="form-control form-control-sm"
-                                               value="{{ $stage->position }}">
-                                    </td>
-
-                                    <td>
-                                        <input type="text"
-                                               name="name"
-                                               form="stage-{{ $stage->id }}"
-                                               class="form-control form-control-sm"
-                                               value="{{ $stage->name }}" required>
-                                    </td>
-
-                                    <td>
-                                        <input type="text"
-                                               name="label"
-                                               form="stage-{{ $stage->id }}"
-                                               class="form-control form-control-sm"
-                                               value="{{ $stage->label }}"
-                                               placeholder="e.g. Warm, Hot">
-                                    </td>
-
-                                    <td>
-                                        <select name="badge_color"
-                                                form="stage-{{ $stage->id }}"
-                                                class="form-select form-select-sm">
-                                            @php
-                                                $colors = ['secondary','primary','success','info','warning','danger','dark'];
-                                            @endphp
-                                            <option value="">Default</option>
-                                            @foreach($colors as $color)
-                                                <option value="{{ $color }}"
-                                                    @selected($stage->badge_color === $color)>
-                                                    {{ ucfirst($color) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-
-                                    <td>
-                                        <div class="input-group input-group-sm">
-                                            <input type="number"
-                                                   name="probability"
-                                                   form="stage-{{ $stage->id }}"
-                                                   class="form-control"
-                                                   value="{{ $stage->probability }}"
-                                                   min="0" max="100">
-                                            <span class="input-group-text">%</span>
-                                        </div>
-                                    </td>
-
-                                    <td class="text-end">
-                                        <button type="submit"
-                                                form="stage-{{ $stage->id }}"
-                                                class="btn btn-sm btn-outline-primary mb-1">
-                                            Save
-                                        </button>
-
-                                        <form method="POST"
-                                              action="{{ route('pipelines.stages.destroy', [$pipeline, $stage]) }}"
-                                              class="d-inline"
-                                              onsubmit="return confirm('Delete this stage?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger">
-                                                Delete
+                            <tbody>
+                                @foreach($pipeline->stages as $stage)
+                                    <tr>
+                                        <td class="text-muted">{{ $stage->position }}</td>
+                                        <td class="fw-semibold">{{ $stage->name }}</td>
+                                        <td>{{ $stage->probability ?? '-' }}%</td>
+                                        <td class="text-end">
+                                            {{-- Update stage (simple inline form) --}}
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#editStage{{ $stage->id }}">
+                                                Edit
                                             </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
+
+                                            <form method="POST"
+                                                action="{{ route('pipelines.stages.destroy', ['workspace' => $ws->slug, 'pipeline' => $pipeline->id, 'stage' => $stage->id]) }}"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Delete this stage?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                            </form>
+
+                                            <div class="collapse mt-2" id="editStage{{ $stage->id }}">
+                                                <form method="POST"
+                                                      action="{{ route('pipelines.stages.update', ['workspace' => $ws->slug, 'pipeline' => $pipeline->id, 'stage' => $stage->id]) }}"
+                                                      class="border rounded p-3 bg-light">
+                                                    @csrf
+                                                    @method('PUT')
+
+                                                    <div class="row g-2">
+                                                        <div class="col-md-6">
+                                                            <input type="text"
+                                                                name="name"
+                                                                value="{{ old('name', $stage->name) }}"
+                                                                class="form-control"
+                                                                placeholder="Stage name"
+                                                                required>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <input type="number"
+                                                                name="probability"
+                                                                value="{{ old('probability', $stage->probability) }}"
+                                                                class="form-control"
+                                                                min="0" max="100"
+                                                                placeholder="%">
+                                                        </div>
+                                                        <div class="col-md-3 d-grid">
+                                                            <button class="btn btn-primary btn-sm">Update</button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
 
-                    {{-- Save order bottom bar (hidden by default) --}}
-                    <form id="stage-order-form"
-                        method="POST"
-                        action="{{ route('pipelines.stages.reorder', $pipeline) }}"
-                        class="stage-order-bar d-none">
-                        @csrf
-                        <input type="hidden" name="order" id="stages-order-input">
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="text-muted small">
-                                You have unsaved stage order changes
-                            </div>
-                            <div>
-                                <button type="button"
-                                        id="stage-order-cancel"
-                                        class="btn btn-link btn-sm text-muted me-2">
-                                    Cancel
-                                </button>
-                                <button type="submit"
-                                        class="btn btn-dark btn-sm">
-                                    Save
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-
-                @else
-                    <p class="text-muted mb-0">No stages yet. Add stages to define your pipeline.</p>
+                    {{-- If you already have stage reorder JS, keep it.
+                         Otherwise we can add later. --}}
                 @endif
 
+                <hr class="my-4">
+
+                {{-- Add Stage --}}
+                <h6 class="mb-2">Add Stage</h6>
+                <form method="POST" action="{{ route('pipelines.stages.store', ['workspace' => $ws->slug, 'pipeline' => $pipeline->id]) }}">
+                    @csrf
+
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text"
+                                   name="name"
+                                   value="{{ old('name') }}"
+                                   class="form-control @error('name') is-invalid @enderror"
+                                   placeholder="e.g. Proposal Sent"
+                                   required>
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <input type="number"
+                                   name="probability"
+                                   value="{{ old('probability') }}"
+                                   class="form-control @error('probability') is-invalid @enderror"
+                                   min="0" max="100"
+                                   placeholder="Probability %">
+                            @error('probability')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-3 d-grid">
+                            <button class="btn btn-success">Add Stage</button>
+                        </div>
+                    </div>
+
+                    <div class="form-text mt-2">
+                        Tip: Keep “Won” at 100% and “Lost” at 0%.
+                    </div>
+                </form>
             </div>
         </div>
+
     </div>
 </div>
 @endsection
-
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const tbody      = document.getElementById('stages-sortable');
-            const orderForm  = document.getElementById('stage-order-form');
-            const orderInput = document.getElementById('stages-order-input');
-            const cancelBtn  = document.getElementById('stage-order-cancel');
-
-            if (!tbody || !orderForm || !orderInput || typeof Sortable === 'undefined') {
-                return;
-            }
-
-            let dirty = false;
-
-            Sortable.create(tbody, {
-                animation: 150,
-                handle: ".drag-handle",
-                onEnd: function () {
-                    dirty = true;
-                    orderForm.classList.remove('d-none');
-                }
-            });
-
-            orderForm.addEventListener('submit', function () {
-                const ids = Array.from(tbody.querySelectorAll('tr[data-stage-id]'))
-                    .map(function (row) {
-                        return row.getAttribute('data-stage-id');
-                    });
-
-                orderInput.value = ids.join(',');
-            });
-
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    // Reload page to reset order back to server values
-                    window.location.reload();
-                });
-            }
-        });
-    </script>
-@endpush
-
