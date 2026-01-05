@@ -95,7 +95,7 @@ Route::middleware(['auth', 'workspace'])
         Route::post('/deals/kanban/move', [DealsController::class, 'moveOnBoard'])->name('deals.kanban.move');
 
         Route::resource('contacts', ContactsController::class)->middleware('feature:contacts');
-        Route::resource('companies', CompaniesController::class)->middleware('feature:companies');;
+        Route::resource('companies', CompaniesController::class)->middleware('feature:companies');
         Route::resource('deals', DealsController::class)->middleware('feature:deals.basic');
         // Route::resource('pipelines', PipelinesController::class)->middleware('feature:pipelines.basic');
 

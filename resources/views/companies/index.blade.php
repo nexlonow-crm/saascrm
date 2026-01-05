@@ -4,6 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4 mb-0">Companies</h1>
   <a href="{{ ws_route('companies.create') }}" class="btn btn-primary">Add Contact</a>
+  {{-- <a href="{{ route('companies.create', ['workspace' => $workspace->id]) }}">Add Company</a> --}}
 </div>
 
 @if(session('status'))
