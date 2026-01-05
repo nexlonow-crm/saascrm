@@ -87,6 +87,7 @@ Route::middleware(['auth', 'workspace'])
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('pipelines', PipelinesController::class);
+       
 
         Route::get('/deals/board', [DealsController::class, 'board'])
             ->name('deals.board')

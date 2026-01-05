@@ -7,37 +7,39 @@ use Illuminate\Http\Request;
 
 class CompaniesController extends Controller
 {
+    private function ws()
+    {
+        return app('currentWorkspace');
+    }
+
     public function index(Request $request)
     {
-        $workspace = app('currentWorkspace');
+        $ws = $this->ws();
 
         $companies = Company::query()
-            // If you use BelongsToWorkspace global scope, this is already scoped.
-            ->when(!method_exists(Company::class, 'bootBelongsToWorkspace'), function ($q) use ($workspace) {
-                $q->where('workspace_id', $workspace->id);
-            })
+            ->where('workspace_id', $ws->id) // ✅ always scope
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         return view('companies.index', [
             'companies' => $companies,
-            'workspace' => $workspace,
+            'workspace' => $ws,
         ]);
     }
 
     public function create()
     {
-        $workspace = app('currentWorkspace');
+        $ws = $this->ws();
 
         return view('companies.create', [
-            'workspace' => $workspace,
+            'workspace' => $ws,
         ]);
     }
 
     public function store(Request $request)
     {
-        $workspace = app('currentWorkspace');
+        $ws = $this->ws();
         $user = $request->user();
 
         $data = $request->validate([
@@ -54,22 +56,21 @@ class CompaniesController extends Controller
             'country'     => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Required scoping fields
-        $data['workspace_id'] = $workspace->id;
-        $data['owner_id'] = $user->id;
+        // ✅ Required scoping fields
+        $data['workspace_id'] = $ws->id;     // ✅ FIX
+        $data['owner_id']     = $user->id;
 
-        $company = Company::create($data);
+        Company::create($data);
 
         return redirect()
-            ->route('companies.index', ['workspace' => $workspace->id])
+            ->route('companies.index', ['workspace' => $ws]) // ✅ model -> slug
             ->with('status', 'Company created successfully.');
     }
 
     public function show(Company $company)
     {
-        $workspace = app('currentWorkspace');
-
-        $this->authorizeCompany($company, $workspace);
+        $ws = $this->ws();
+        $this->authorizeCompany($company, $ws);
 
         $company->load([
             'contacts',
@@ -78,51 +79,42 @@ class CompaniesController extends Controller
             'notes.user',
         ]);
 
-        // Combined timeline: activities + notes
-        $timeline = collect();
-
-        foreach ($company->activities as $activity) {
-            $timeline->push([
-                'kind'  => 'activity',
-                'date'  => $activity->due_date ?? $activity->created_at,
-                'model' => $activity,
-            ]);
-        }
-
-        foreach ($company->notes as $note) {
-            $timeline->push([
-                'kind'  => 'note',
-                'date'  => $note->created_at,
-                'model' => $note,
-            ]);
-        }
-
-        $timeline = $timeline->sortByDesc('date')->values();
+        $timeline = collect()
+            ->merge($company->activities->map(fn ($a) => [
+                'kind' => 'activity',
+                'date' => $a->due_date ?? $a->created_at,
+                'model' => $a,
+            ]))
+            ->merge($company->notes->map(fn ($n) => [
+                'kind' => 'note',
+                'date' => $n->created_at,
+                'model' => $n,
+            ]))
+            ->sortByDesc('date')
+            ->values();
 
         return view('companies.show', [
-            'company'  => $company,
-            'timeline' => $timeline,
-            'workspace' => $workspace,
+            'company'   => $company,
+            'timeline'  => $timeline,
+            'workspace' => $ws,
         ]);
     }
 
     public function edit(Company $company)
     {
-        $workspace = app('currentWorkspace');
-
-        $this->authorizeCompany($company, $workspace);
+        $ws = $this->ws();
+        $this->authorizeCompany($company, $ws);
 
         return view('companies.edit', [
             'company' => $company,
-            'workspace' => $workspace,
+            'workspace' => $ws,
         ]);
     }
 
     public function update(Request $request, Company $company)
     {
-        $workspace = app('currentWorkspace');
-
-        $this->authorizeCompany($company, $workspace);
+        $ws = $this->ws();
+        $this->authorizeCompany($company, $ws);
 
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
@@ -141,31 +133,25 @@ class CompaniesController extends Controller
         $company->update($data);
 
         return redirect()
-            ->route('companies.index', ['workspace' => $workspace->id])
+            ->route('companies.index', ['workspace' => $ws])
             ->with('status', 'Company updated successfully.');
     }
 
     public function destroy(Company $company)
     {
-        $workspace = app('currentWorkspace');
-
-        $this->authorizeCompany($company, $workspace);
+        $ws = $this->ws();
+        $this->authorizeCompany($company, $ws);
 
         $company->delete();
 
         return redirect()
-            ->route('companies.index', ['workspace' => $workspace->id])
+            ->route('companies.index', ['workspace' => $ws])
             ->with('status', 'Company deleted.');
     }
 
-    /**
-     * Workspace-level authorization:
-     * - If you have BelongsToWorkspace global scope, Laravel binding will already prevent cross-workspace access.
-     * - This is still good to keep as a safety net.
-     */
-    protected function authorizeCompany(Company $company, $workspace): void
+    protected function authorizeCompany(Company $company, $ws): void
     {
-        if ((int) $company->workspace_id !== (int) $workspace->id) {
+        if ((int) $company->workspace_id !== (int) $ws->id) {
             abort(403);
         }
     }
